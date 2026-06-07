@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --panel-dark:  #3e3e3e;
+    --panel:       #636466;
+    --white:       #f0ede8;
+    --serigraph:   #e8e4dc;
+    --ivory:       #f5dfa0;
+    --muted:       #8a8880;
+  }
+
+  body {
+    width: 1920px; height: 1080px;
+    background: transparent;
+    overflow: hidden;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  /* ── CONTENEUR ALERTE — centré en haut ── */
+  .alert-wrap {
+    position: absolute;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-160px);
+    width: 680px;
+    pointer-events: none;
+    transition: none;
+    z-index: 100;
+  }
+
+  /* États d'animation */
+  .alert-wrap.in {
+    animation: alertSlideIn 0.55s cubic-bezier(0.16,1,0.3,1) forwards;
+  }
+  .alert-wrap.hold {
+    transform: translateX(-50%) translateY(0);
+  }
+  .alert-wrap.out {
+    animation: alertSlideOut 0.45s cubic-bezier(0.7,0,1,1) forwards;
+  }
+
+  @keyframes alertSlideIn {
+    from { transform: translateX(-50%) translateY(-160px); opacity:0; }
+    to   { transform: translateX(-50%) translateY(0);      opacity:1; }
+  }
+  @keyframes alertSlideOut {
+    from { transform: translateX(-50%) translateY(0);       opacity:1; }
+    to   { transform: translateX(-50%) translateY(-160px);  opacity:0; }
+  }
+
+  /* ── CORPS DE L'ALERTE ── */
+  .alert-box {
+    background: var(--panel-dark);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Texture métal */
+  .alert-box::before {
+    content:'';
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      180deg, transparent 0, transparent 2px,
+      rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 3px
+    );
+    pointer-events:none; z-index:1;
+  }
+
+  /* Scanlines */
+  .alert-box::after {
+    content:'';
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px
+    );
+    pointer-events:none; z-index:2;
+  }
+
+  /* Liseré haut 4 couleurs */
+  .alert-stripe-top {
+    height: 4px;
+    display: flex;
+    position: relative; z-index:3;
+  }
+  /* Liseré bas accent (couleur selon type) */
+  .alert-stripe-bot {
+    height: 3px;
+    position: relative; z-index:3;
+  }
+
+  .bs { flex:1; }
+  .bs-r { background:var(--juno-red); }
+  .bs-b { background:var(--juno-blue); }
+  .bs-o { background:var(--juno-orange); }
+  .bs-y { background:var(--juno-yellow); }
+
+  /* Rack stripes latéraux */
+  .rack-l, .rack-r {
+    position:absolute; top:0; bottom:0; width:3px; z-index:3;
+  }
+  .rack-l { left:0; }
+  .rack-r { right:0; }
+
+  /* ── CONTENU ── */
+  .alert-inner {
+    padding: 14px 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative; z-index:3;
+  }
+
+  /* Ligne type (label discret) */
+  .alert-type {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* Ligne principale */
+  .alert-main {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--white);
+    line-height: 1.1;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .alert-name {
+    /* couleur définie inline selon le type */
+  }
+
+  /* Ligne sous-texte */
+  .alert-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Montant (don/bits) */
+  .alert-amount {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  /* ── BARRE DE PROGRESSION (durée de l'alerte) ── */
+  .alert-progress {
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    position: relative; z-index:3;
+    overflow: hidden;
+  }
+  .alert-progress-fill {
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    transform: scaleX(1);
+  }
+
+  /* ── LED LATÉRALES DE L'ALERTE ── */
+  .alert-leds {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    z-index: 4;
+  }
+  .a-led {
+    width: 5px; height: 5px; border-radius: 50%;
+  }
+
+  /* ── FLASH D'ENTRÉE (overlay coloré bref) ── */
+  .alert-flash {
+    position: absolute; inset: 0; z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 3px;
+  }
+  .flash-anim {
+    animation: flashBurst 0.25s ease forwards;
+  }
+  @keyframes flashBurst {
+    0%   { opacity: 0.18; }
+    100% { opacity: 0; }
+  }
+
+  /* ── VU-MÈTRES (hype train & raid) ── */
+  .vu-row {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    height: 24px;
+    margin-top: 4px;
+  }
+  .vu-b {
+    width: 6px;
+    border-radius: 1px 1px 0 0;
+    animation: vuA var(--d,0.6s) ease-in-out infinite alternate;
+  }
+  @keyframes vuA { from{height:4px;} to{height:var(--h,20px);} }
+
+  /* ── ICÔNE TYPE ── */
+  .alert-icon {
+    font-size: 28px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* Points de chargement (message raid) */
+  .dots span {
+    animation: dotFade 1.2s ease-in-out infinite;
+    opacity: 0;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotFade { 0%,60%,100%{opacity:0;} 30%{opacity:1;} }
+</style>
+</head>
+<body>
+
+<div class="alert-wrap" id="alertWrap">
+  <div class="alert-box" id="alertBox">
+    <div class="alert-flash"  id="alertFlash"></div>
+    <div class="rack-l"       id="rackL"></div>
+    <div class="rack-r"       id="rackR"></div>
+    <div class="alert-stripe-top">
+      <div class="bs bs-r"></div>
+      <div class="bs bs-b"></div>
+      <div class="bs bs-o"></div>
+      <div class="bs bs-y"></div>
+    </div>
+    <div class="alert-inner">
+      <div class="alert-type"  id="alertType"></div>
+      <div class="alert-main"  id="alertMain"></div>
+      <div class="alert-sub"   id="alertSub"></div>
+      <div class="vu-row"      id="vuRow" style="display:none"></div>
+    </div>
+    <div class="alert-leds"  id="alertLeds"></div>
+    <div class="alert-progress">
+      <div class="alert-progress-fill" id="progressFill"></div>
+    </div>
+    <div class="alert-stripe-bot" id="alertStripBot"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   CONFIGURATION DES TYPES D'ALERTES
+   ════════════════════════════════════════════════════ */
+const TYPES = {
+  follow: {
+    label:    'Nouveau follower',
+    icon:     '♥',
+    color:    '#b13a26',   // juno-red
+    subtext:  (name) => `${name} nous a rejoints !`,
+    mainHtml: (name) => `<span class="alert-icon">♥</span><span class="alert-name" style="color:#b13a26">${name}</span>`,
+    rack:     '#b13a26',
+    bot:      '#b13a26',
+    duration: 4000,
+    vus:      false,
+  },
+  sub: {
+    label:    'Nouveau subscriber',
+    icon:     '★',
+    color:    '#3c4bb0',   // juno-blue
+    subtext:  (name, msg) => msg ? `"${msg}"` : 'Merci pour le sub !',
+    mainHtml: (name) => `<span class="alert-icon">★</span><span class="alert-name" style="color:#e8e4dc">${name}</span><span style="font-size:16px;color:#3c4bb0;letter-spacing:3px">S'ABONNE</span>`,
+    rack:     '#3c4bb0',
+    bot:      '#3c4bb0',
+    duration: 5000,
+    vus:      false,
+  },
+  bits: {
+    label:    'Bits / Don',
+    icon:     '◆',
+    color:    '#f87d37',   // juno-orange
+    subtext:  (name, msg) => msg ? `"${msg}"` : '',
+    mainHtml: (name, amount) => `<span class="alert-icon">◆</span><span class="alert-name" style="color:#e8e4dc">${name}</span><span class="alert-amount" style="color:#f87d37">${amount} bits</span>`,
+    rack:     '#f87d37',
+    bot:      '#f87d37',
+    duration: 5500,
+    vus:      false,
+  },
+  raid: {
+    label:    'Raid',
+    icon:     '▶',
+    color:    '#e9bc3f',   // juno-yellow
+    subtext:  (name, count) => `avec ${count} viewers <span class="dots"><span>.</span><span>.</span><span>.</span></span>`,
+    mainHtml: (name) => `<span class="alert-icon" style="color:#e9bc3f">▶</span><span class="alert-name" style="color:#e8e4dc">${name}</span><span style="font-size:16px;color:#e9bc3f;letter-spacing:3px">RAID !</span>`,
+    rack:     '#e9bc3f',
+    bot:      '#e9bc3f',
+    duration: 6000,
+    vus:      true,
+  },
+  hype: {
+    label:    'Hype Train',
+    icon:     '▲',
+    color:    '#f87d37',
+    subtext:  (lvl) => `Niveau ${lvl} — en route !`,
+    mainHtml: (lvl) => `<span class="alert-icon" style="color:#f87d37">▲</span><span style="color:#e8e4dc">HYPE TRAIN</span><span class="alert-amount" style="color:#e9bc3f;font-size:26px">niv. ${lvl}</span>`,
+    rack:     'linear-gradient(180deg,#b13a26,#3c4bb0,#f87d37,#e9bc3f)',
+    bot:      '#e9bc3f',
+    duration: 7000,
+    vus:      true,
+  },
+};
+
+/* ════════════════════════════════════════════════════
+   MOTEUR D'ALERTE
+   ════════════════════════════════════════════════════ */
+let alertQueue = [];
+let alertActive = false;
+
+function queueAlert(type, params) {
+  alertQueue.push({ type, params });
+  if (!alertActive) processQueue();
+}
+
+function processQueue() {
+  if (!alertQueue.length) { alertActive = false; return; }
+  alertActive = true;
+  const { type, params } = alertQueue.shift();
+  showAlert(type, params);
+}
+
+function showAlert(type, params) {
+  const cfg = TYPES[type];
+  if (!cfg) { processQueue(); return; }
+
+  const wrap     = document.getElementById('alertWrap');
+  const typeEl   = document.getElementById('alertType');
+  const mainEl   = document.getElementById('alertMain');
+  const subEl    = document.getElementById('alertSub');
+  const vuRow    = document.getElementById('vuRow');
+  const leds     = document.getElementById('alertLeds');
+  const progress = document.getElementById('progressFill');
+  const flash    = document.getElementById('alertFlash');
+  const rackL    = document.getElementById('rackL');
+  const rackR    = document.getElementById('rackR');
+  const stripBot = document.getElementById('alertStripBot');
+
+  // Remplir le contenu
+  typeEl.textContent  = cfg.label;
+  typeEl.style.color  = cfg.color;
+  mainEl.innerHTML    = cfg.mainHtml(...params.main);
+  subEl.innerHTML     = cfg.subtext(...params.sub);
+
+  // VU-mètres (raid / hype)
+  if (cfg.vus) {
+    vuRow.style.display = 'flex';
+    const cols = ['#b13a26','#3c4bb0','#f87d37','#e9bc3f','#b13a26','#3c4bb0','#f87d37','#e9bc3f','#b13a26','#f87d37'];
+    const heights = [14,20,10,18,22,12,16,20,10,18];
+    const delays  = [0,0.1,0.2,0.05,0.15,0.3,0.1,0.25,0.0,0.2];
+    vuRow.innerHTML = cols.map((c,i) =>
+      `<div class="vu-b" style="background:${c};--h:${heights[i]}px;--d:${0.5+i*0.08}s;animation-delay:${delays[i]}s"></div>`
+    ).join('');
+  } else {
+    vuRow.style.display = 'none';
+  }
+
+  // LED latérales (4 couleurs Juno)
+  const ledColors = ['#b13a26','#3c4bb0','#f87d37','#e9bc3f','#b13a26'];
+  leds.innerHTML = ledColors.map((c,i) =>
+    `<div class="a-led" style="background:${c};animation:sLedP ${2+i*0.4}s ease-in-out infinite ${i*0.3}s"></div>`
+  ).join('');
+
+  // Rack + bande couleur accent
+  rackL.style.background = cfg.rack;
+  rackR.style.background = cfg.rack;
+  stripBot.style.background = cfg.bot;
+
+  // Flash d'entrée
+  flash.style.background = cfg.color;
+  flash.classList.remove('flash-anim');
+  void flash.offsetWidth; // reflow
+  flash.classList.add('flash-anim');
+
+  // Barre de progression
+  progress.style.background = cfg.color;
+  progress.style.transition = 'none';
+  progress.style.transform  = 'scaleX(1)';
+
+  // Apparition
+  wrap.classList.remove('hold','out','in');
+  void wrap.offsetWidth;
+  wrap.classList.add('in');
+
+  setTimeout(() => {
+    wrap.classList.remove('in');
+    wrap.classList.add('hold');
+    // Lancer la barre de progression
+    progress.style.transition = `transform ${cfg.duration}ms linear`;
+    progress.style.transform  = 'scaleX(0)';
+  }, 550);
+
+  // Disparition
+  setTimeout(() => {
+    wrap.classList.remove('hold');
+    wrap.classList.add('out');
+    setTimeout(() => {
+      wrap.classList.remove('out');
+      processQueue();
+    }, 450);
+  }, 550 + cfg.duration);
+}
+
+/* ════════════════════════════════════════════════════
+   API PUBLIQUE — appeler depuis StreamElements / OBS
+   ════════════════════════════════════════════════════ */
+
+/** Nouveau follower */
+window.alertFollow = function(name) {
+  queueAlert('follow', {
+    main: [name],
+    sub:  [name],
+  });
+};
+
+/** Nouveau subscriber */
+window.alertSub = function(name, message = '') {
+  queueAlert('sub', {
+    main: [name],
+    sub:  [name, message],
+  });
+};
+
+/** Don / Bits */
+window.alertBits = function(name, amount, message = '') {
+  queueAlert('bits', {
+    main: [name, amount],
+    sub:  [name, message],
+  });
+};
+
+/** Raid */
+window.alertRaid = function(name, viewers = 0) {
+  queueAlert('raid', {
+    main: [name],
+    sub:  [name, viewers],
+  });
+};
+
+/** Hype Train */
+window.alertHype = function(level = 1) {
+  queueAlert('hype', {
+    main: [level],
+    sub:  [level],
+  });
+};
+
+/* ════════════════════════════════════════════════════
+   TWITCH EVENTSUB — connexion temps réel
+   ════════════════════════════════════════════════════ */
+const TW_CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
+const TW_CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
+const TW_REFRESH_TOKEN = '71zu3xcd78l78ao9ts43jd77wrmkp7m1tgr3yxok1h0vprph1v';
+const TW_BROADCASTER   = '44582688';
+
+let twToken = null, twTokenExpiry = 0;
+
+async function twGetToken() {
+  if (twToken && Date.now() < twTokenExpiry) return twToken;
+  const res = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id:     TW_CLIENT_ID,
+      client_secret: TW_CLIENT_SECRET,
+      refresh_token: TW_REFRESH_TOKEN,
+      grant_type:    'refresh_token',
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    twToken = data.access_token;
+    twTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  }
+  return twToken;
+}
+
+async function twSubscribe(sessionId, token, type, condition) {
+  await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+    method: 'POST',
+    headers: {
+      'Client-Id': TW_CLIENT_ID,
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      type,
+      version: type === 'channel.follow' ? '2' : '1',
+      condition,
+      transport: { method: 'websocket', session_id: sessionId },
+    })
+  });
+}
+
+async function twConnect() {
+  const token = await twGetToken();
+  if (!token) { setTimeout(twConnect, 10000); return; }
+
+  const ws = new WebSocket('wss://eventsub.wss.twitch.tv/ws');
+
+  ws.onmessage = async (e) => {
+    const msg = JSON.parse(e.data);
+    const type = msg.metadata?.message_type;
+
+    if (type === 'session_welcome') {
+      const sid = msg.payload.session.id;
+      const bc  = { broadcaster_user_id: TW_BROADCASTER };
+      const mod = { broadcaster_user_id: TW_BROADCASTER, moderator_user_id: TW_BROADCASTER };
+      await twSubscribe(sid, token, 'channel.follow',            mod);
+      await twSubscribe(sid, token, 'channel.subscribe',         bc);
+      await twSubscribe(sid, token, 'channel.cheer',             bc);
+      await twSubscribe(sid, token, 'channel.raid',              { to_broadcaster_user_id: TW_BROADCASTER });
+      await twSubscribe(sid, token, 'channel.hype_train.begin',  bc);
+    }
+
+    if (type === 'notification') {
+      const sub  = msg.metadata.subscription_type;
+      const ev   = msg.payload.event;
+
+      if (sub === 'channel.follow')
+        alertFollow(ev.user_name);
+
+      else if (sub === 'channel.subscribe')
+        alertSub(ev.user_name, '');
+
+      else if (sub === 'channel.cheer')
+        alertBits(ev.user_name, ev.bits, ev.message || '');
+
+      else if (sub === 'channel.raid')
+        alertRaid(ev.from_broadcaster_user_name, ev.viewers);
+
+      else if (sub === 'channel.hype_train.begin')
+        alertHype(ev.level);
+    }
+  };
+
+  ws.onclose = () => setTimeout(twConnect, 5000);
+  ws.onerror = () => ws.close();
+}
+
+twConnect();
+</script>
+
+<style>
+  /* LED animation (définie ici pour être accessible depuis le JS inline) */
+  @keyframes sLedP {
+    0%,100%{ opacity:0.2; }
+    50%    { opacity:0.9; }
+  }
+</style>
+</body>
+</html>

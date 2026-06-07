@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Charte graphique — Toofi</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    /* === Palette JUNO-106 — source de vérité === */
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
+
+    /* === Gris chassis Roland === */
+    --bg:          #3e3e3e;
+    --panel:       #636466;
+    --panel-dark:  #4a4a4c;
+    --panel-light: #7a7a7c;
+    --chat-bg:     #2a2a2c;
+    --void:        #1a1a1a;
+
+    /* === Textes === */
+    --white:       #f0ede8;
+    --serigraph:   #e8e4dc;
+    --ivory:       #f5dfa0;
+    --muted:       #a09880;
+    --dark-text:   #1a1a1a;
+
+    --line:        rgba(255,255,255,0.08);
+    --maxw:        920px;
+  }
+
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family:'Rajdhani', sans-serif;
+    line-height:1.5;
+    overflow-x:hidden;
+    padding-bottom:120px;
+  }
+
+  /* Texture métal brossé global */
+  body::before {
+    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 2px, rgba(255,255,255,0.022) 2px 3px),
+      repeating-linear-gradient(90deg, transparent 0 8px, rgba(0,0,0,0.012) 8px 9px);
+  }
+  /* Scanlines très discrètes */
+  body::after {
+    content:''; position:fixed; inset:0; z-index:1; pointer-events:none;
+    background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,0.04) 3px 4px);
+  }
+
+  .page { position:relative; z-index:2; max-width:var(--maxw); margin:0 auto; padding:0 28px; }
+
+  /* ============ HEADER ============ */
+  header {
+    position:relative;
+    padding:72px 0 40px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:8px;
+  }
+  /* Bande 4 couleurs en haut de page */
+  .topbands { position:fixed; top:0; left:0; right:0; height:4px; display:flex; z-index:10; }
+  .topbands i { flex:1; }
+  .wordmark {
+    font-size:84px; font-weight:700; letter-spacing:14px;
+    text-transform:uppercase; line-height:1; color:var(--white);
+  }
+  .wordmark .o { color:var(--juno-blue-bright); }
+  .doc-title {
+    margin-top:18px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:13px; letter-spacing:5px; text-transform:uppercase;
+    color:var(--ivory);
+  }
+  .doc-meta {
+    margin-top:6px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:11px; letter-spacing:2px; color:var(--muted);
+  }
+  .lead {
+    margin-top:24px; max-width:680px;
+    font-size:18px; font-weight:400; color:var(--serigraph);
+  }
+
+  /* Règle 4 points (motif récurrent de la marque) */
+  .colorrule { display:flex; align-items:center; gap:0; margin:30px 0; }
+  .colorrule .l { flex:1; height:1px; background:rgba(255,255,255,0.12); }
+  .colorrule .dots { display:flex; gap:8px; margin:0 16px; }
+  .colorrule .d { width:8px; height:8px; border-radius:50%; animation:dotPulse 2.8s ease-in-out infinite; }
+  .colorrule .d.r { background:var(--juno-red);    animation-delay:0s; }
+  .colorrule .d.b { background:var(--juno-blue);    animation-delay:.4s; }
+  .colorrule .d.o { background:var(--juno-orange);  animation-delay:.8s; }
+  .colorrule .d.y { background:var(--juno-yellow);  animation-delay:1.2s; }
+  @keyframes dotPulse { 0%,100%{ opacity:.45; transform:scale(1);} 50%{ opacity:1; transform:scale(1.25);} }
+
+  /* ============ NAV ============ */
+  nav {
+    position:sticky; top:4px; z-index:5;
+    background:rgba(62,62,62,0.92);
+    backdrop-filter:blur(6px);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:10px 14px; margin:24px 0 48px;
+    display:flex; flex-wrap:wrap; gap:6px 4px;
+  }
+  nav a {
+    font-family:'Share Tech Mono', monospace;
+    font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--muted); text-decoration:none;
+    padding:6px 12px; border:1px solid transparent; border-radius:3px;
+    transition:all .15s;
+  }
+  nav a:hover { color:var(--ivory); border-color:rgba(248,125,55,0.4); }
+
+  /* ============ SECTIONS ============ */
+  section { margin-bottom:72px; scroll-margin-top:80px; }
+  .sec-head { display:flex; align-items:baseline; gap:14px; margin-bottom:6px; }
+  .sec-num {
+    font-family:'Share Tech Mono', monospace;
+    font-size:13px; letter-spacing:2px; color:var(--juno-orange);
+  }
+  h2 {
+    font-size:32px; font-weight:600; letter-spacing:4px;
+    text-transform:uppercase; color:var(--white);
+  }
+  .sec-sub { color:var(--muted); font-size:15px; margin-bottom:28px; max-width:680px; }
+  h3 {
+    font-size:13px; font-weight:600; letter-spacing:4px; text-transform:uppercase;
+    color:var(--ivory); margin:34px 0 16px;
+    font-family:'Share Tech Mono', monospace;
+  }
+  p { color:var(--serigraph); margin-bottom:14px; max-width:680px; }
+  p.note { color:var(--muted); font-size:14px; }
+  strong { color:var(--white); font-weight:600; }
+  code {
+    font-family:'Share Tech Mono', monospace; font-size:.9em;
+    background:rgba(0,0,0,0.28); color:var(--ivory);
+    padding:2px 7px; border-radius:3px;
+  }
+
+  /* ============ PALETTE ============ */
+  .swatches { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
+  .sw {
+    border:1px solid var(--line); border-radius:4px; overflow:hidden;
+    cursor:pointer; transition:transform .12s, border-color .12s;
+    background:rgba(0,0,0,0.15);
+  }
+  .sw:hover { transform:translateY(-2px); border-color:rgba(255,255,255,0.25); }
+  .sw .chip { height:78px; position:relative; }
+  .sw .meta { padding:10px 12px 12px; }
+  .sw .nm { font-size:15px; font-weight:600; color:var(--white); letter-spacing:.5px; }
+  .sw .var { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.5px; margin-top:3px; }
+  .sw .hex { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--ivory); letter-spacing:1px; margin-top:6px; }
+  .sw .copied {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.55); color:var(--white);
+    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase;
+    opacity:0; transition:opacity .15s;
+  }
+  .sw.flash .copied { opacity:1; }
+
+  /* ============ TYPO ============ */
+  .specimen { border:1px solid var(--line); border-radius:4px; padding:26px; margin-bottom:18px; background:rgba(0,0,0,0.12); }
+  .specimen .tag {
+    font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:3px;
+    text-transform:uppercase; color:var(--juno-orange); margin-bottom:14px;
+  }
+  .specimen .big-raj { font-family:'Rajdhani'; font-weight:700; font-size:52px; letter-spacing:6px; text-transform:uppercase; color:var(--white); line-height:1.1; }
+  .specimen .big-mono { font-family:'Share Tech Mono'; font-size:30px; letter-spacing:3px; color:var(--ivory); }
+  .weights { display:flex; flex-wrap:wrap; gap:24px; margin-top:18px; }
+  .weights span { color:var(--serigraph); }
+  .weights .w4 { font-weight:400; } .weights .w5 { font-weight:500; }
+  .weights .w6 { font-weight:600; } .weights .w7 { font-weight:700; }
+
+  /* ============ TABLES ============ */
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:14px; }
+  th, td { text-align:left; padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th {
+    font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--juno-orange); font-weight:400;
+  }
+  td { color:var(--serigraph); }
+  td code { white-space:nowrap; }
+  td strong { color:var(--white); }
+
+  /* ============ ELEMENTS SIGNATURES (rendus vivants) ============ */
+  .demo { border:1px solid var(--line); border-radius:4px; padding:22px; margin-bottom:18px; background:rgba(0,0,0,0.12); }
+  .demo .cap { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:16px; }
+
+  .demo-bands { display:flex; height:8px; border-radius:2px; overflow:hidden; }
+  .demo-bands i { flex:1; }
+
+  .demo-corners { position:relative; height:120px; border:1px solid rgba(255,255,255,0.06); }
+  .dc { position:absolute; width:18px; height:18px; }
+  .dc.tl { top:0; left:0; border-top:2px solid var(--juno-red); border-left:2px solid var(--juno-red); }
+  .dc.tr { top:0; right:0; border-top:2px solid var(--juno-yellow); border-right:2px solid var(--juno-yellow); }
+  .dc.bl { bottom:0; left:0; border-bottom:2px solid var(--juno-blue); border-left:2px solid var(--juno-blue); }
+  .dc.br { bottom:0; right:0; border-bottom:2px solid var(--juno-orange); border-right:2px solid var(--juno-orange); }
+  .dc-label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); }
+
+  .demo-leds { display:flex; gap:10px; }
+  .led { width:7px; height:7px; border-radius:50%; animation:ledP var(--d,2.8s) ease-in-out infinite var(--dl,0s); }
+  @keyframes ledP { 0%,100%{ opacity:.25; } 50%{ opacity:1; } }
+
+  .demo-rack { display:flex; gap:14px; align-items:center; }
+  .rack { width:6px; height:90px; border-radius:2px; }
+  .rack.l { background:linear-gradient(180deg,var(--juno-red),var(--juno-blue),var(--juno-orange),var(--juno-yellow)); }
+  .rack.r { background:linear-gradient(180deg,var(--juno-yellow),var(--juno-orange),var(--juno-blue),var(--juno-red)); }
+
+  .demo-name { font-family:'Rajdhani'; font-weight:700; font-size:64px; letter-spacing:14px; text-transform:uppercase; color:var(--white); line-height:1; }
+  .demo-name .o { color:var(--juno-blue-bright); }
+  .demo-name.ghost { color:rgba(240,237,232,0.28); font-size:48px; }
+  .demo-name.ghost .o { color:rgba(60,75,176,0.6); }
+
+  #wave { width:100%; height:60px; display:block; }
+
+  .demo-date { font-family:'Share Tech Mono',monospace; font-size:24px; color:var(--ivory); letter-spacing:2px; }
+  .demo-date small { color:var(--muted); font-size:11px; letter-spacing:2px; display:block; margin-top:6px; }
+
+  /* ============ SCHEMA LAYOUT ============ */
+  .schema {
+    position:relative; aspect-ratio:16/9; max-width:560px;
+    border:1px solid rgba(255,255,255,0.12); background:var(--bg);
+    font-family:'Share Tech Mono',monospace;
+  }
+  .schema .zone { position:absolute; display:flex; align-items:center; justify-content:center;
+    font-size:10px; letter-spacing:1px; color:var(--muted); text-align:center; }
+  .schema .cam { left:0; top:0; right:24%; bottom:9%; background:var(--void); color:rgba(160,152,128,0.4); }
+  .schema .chat { right:0; top:0; width:24%; bottom:9%; background:var(--chat-bg); border-left:1px solid var(--line); }
+  .schema .bar { left:0; right:0; bottom:0; height:9%; background:var(--panel-dark); border-top:2px solid var(--juno-orange); }
+  .schema-bands { position:absolute; top:0; left:0; right:0; height:3px; display:flex; z-index:3; }
+  .schema-bands i { flex:1; }
+
+  /* ============ PRINCIPES ============ */
+  .principles { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:8px; }
+  .pr { border:1px solid var(--line); border-left:3px solid var(--juno-blue); border-radius:0 4px 4px 0; padding:18px 20px; background:rgba(0,0,0,0.12); }
+  .pr:nth-child(2){ border-left-color:var(--juno-red); }
+  .pr:nth-child(3){ border-left-color:var(--juno-orange); }
+  .pr:nth-child(4){ border-left-color:var(--juno-yellow); }
+  .pr:nth-child(5){ border-left-color:var(--juno-blue); }
+  .pr:nth-child(6){ border-left-color:var(--juno-red); }
+  .pr h4 { font-size:15px; font-weight:600; letter-spacing:1px; color:var(--white); margin-bottom:8px; }
+  .pr p { font-size:14px; color:var(--muted); margin:0; }
+
+  /* ============ HARMONISATION ============ */
+  .warn { border:1px solid rgba(248,125,55,0.35); border-radius:4px; padding:18px 20px; margin-bottom:14px; background:rgba(248,125,55,0.05); }
+  .warn .h { font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--juno-orange); margin-bottom:8px; }
+  .warn p { font-size:14px; margin:0; color:var(--serigraph); }
+  .warn p + p { margin-top:8px; }
+
+  footer {
+    border-top:1px solid var(--line); margin-top:40px; padding-top:28px;
+    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--muted);
+  }
+
+  @media (max-width:600px) {
+    .wordmark { font-size:52px; letter-spacing:8px; }
+    h2 { font-size:24px; }
+    .demo-name { font-size:44px; letter-spacing:8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbands">
+  <i style="background:var(--juno-red)"></i>
+  <i style="background:var(--juno-blue)"></i>
+  <i style="background:var(--juno-orange)"></i>
+  <i style="background:var(--juno-yellow)"></i>
+</div>
+
+<div class="page">
+
+  <header>
+    <div class="wordmark">T<span class="o">o</span>ofi</div>
+    <div class="doc-title">Charte graphique &amp; système de design</div>
+    <div class="doc-meta">Identité OBS / Twitch · fondée sur le Roland JUNO-106 · v1</div>
+    <p class="lead">Document de référence pour tout designer ou développeur intervenant sur l'habillage. Il définit les couleurs, la typographie, les éléments signatures, le système de mise en page et les principes directeurs. La palette JUNO-106 est l'unique source de vérité — aucune couleur externe.</p>
+    <div class="colorrule">
+      <div class="l"></div>
+      <div class="dots"><div class="d r"></div><div class="d b"></div><div class="d o"></div><div class="d y"></div></div>
+      <div class="l"></div>
+    </div>
+  </header>
+
+  <nav>
+    <a href="#principes">00 · Principes</a>
+    <a href="#couleurs">01 · Couleurs</a>
+    <a href="#typo">02 · Typographie</a>
+    <a href="#signatures">03 · Éléments signatures</a>
+    <a href="#layout">04 · Système de layout</a>
+    <a href="#composants">05 · Composants</a>
+    <a href="#harmonisation">06 · À harmoniser</a>
+  </nav>
+
+  <!-- ===================== 00 PRINCIPES ===================== -->
+  <section id="principes">
+    <div class="sec-head"><span class="sec-num">00</span><h2>Principes directeurs</h2></div>
+    <p class="sec-sub">Six règles qui priment sur tout choix ponctuel. En cas de doute, on s'y réfère.</p>
+    <div class="principles">
+      <div class="pr"><h4>La palette JUNO est la loi</h4><p>Quatre couleurs (rouge, bleu, orange, jaune) extraites du JUNO-106. Aucune couleur n'est inventée ni importée d'ailleurs.</p></div>
+      <div class="pr"><h4>Concevoir par soustraction</h4><p>Chaque itération retire plutôt qu'elle n'ajoute. On a enlevé glow, barres hautes et waveforms superflues pour gagner en pureté.</p></div>
+      <div class="pr"><h4>Ni néon ni glow</h4><p>Le contraste vient de la couleur pure sur gris, jamais de la lumière. Pas de <code>box-shadow</code> lumineux, pas de halo.</p></div>
+      <div class="pr"><h4>Transparent par défaut</h4><p>Les overlays sont transparents. On ne pose un fond opaque que si un élément d'UI l'exige vraiment pour la lisibilité.</p></div>
+      <div class="pr"><h4>Gris chassis, jamais noir</h4><p>La base est le gris boîtier <code>#3e3e3e</code>, pas le noir pur. C'est ce qui donne le ton « matériel synthé ».</p></div>
+      <div class="pr"><h4>L'outro reste affiché</h4><p>Le contenu de fin est permanent — il ne s'anime jamais hors de l'écran. Le viewer doit pouvoir le lire à tout moment.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== 01 COULEURS ===================== -->
+  <section id="couleurs">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Couleurs</h2></div>
+    <p class="sec-sub">Cliquez une pastille pour copier la valeur hexadécimale. Toutes les couleurs sont exposées en variables CSS sous <code>:root</code>.</p>
+
+    <h3>Palette JUNO-106 — accents</h3>
+    <div class="swatches" id="sw-juno"></div>
+
+    <h3>Gris chassis Roland — surfaces</h3>
+    <div class="swatches" id="sw-grey"></div>
+
+    <h3>Textes &amp; sérigraphie</h3>
+    <div class="swatches" id="sw-text"></div>
+  </section>
+
+  <!-- ===================== 02 TYPO ===================== -->
+  <section id="typo">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Typographie</h2></div>
+    <p class="sec-sub">Deux familles Google Fonts, deux rôles. Rajdhani pour tout ce qui est nom et titre ; Share Tech Mono pour les données, labels et sous-titres techniques.</p>
+
+    <div class="specimen">
+      <div class="tag">Rajdhani — noms &amp; titres</div>
+      <div class="big-raj">T<span style="color:var(--juno-blue-bright)">o</span>ofi · Gaming</div>
+      <div class="weights">
+        <span class="w4">400 Regular</span><span class="w5">500 Medium</span>
+        <span class="w6">600 SemiBold</span><span class="w7">700 Bold</span>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="tag">Share Tech Mono — données &amp; labels</div>
+      <div class="big-mono">21:48 · 07/06/2026</div>
+      <div class="weights"><span style="font-family:'Share Tech Mono'">FOLLOW · CAM · CHAT · BPM</span></div>
+    </div>
+
+    <h3>Échelle &amp; réglages typographiques</h3>
+    <table>
+      <thead><tr><th>Usage</th><th>Famille</th><th>Poids</th><th>Taille</th><th>Interlettrage</th><th>Casse</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Nom — intro</strong></td><td>Rajdhani</td><td>700</td><td>148 px</td><td>28 px</td><td>MAJ</td></tr>
+        <tr><td><strong>Nom — outro</strong></td><td>Rajdhani</td><td>700</td><td>110 px</td><td>24 px</td><td>MAJ</td></tr>
+        <tr><td><strong>Nom — veille</strong></td><td>Rajdhani</td><td>700</td><td>96 px</td><td>22 px</td><td>MAJ</td></tr>
+        <tr><td><strong>Marque — barres</strong></td><td>Rajdhani</td><td>700</td><td>20 px</td><td>5 px</td><td>MAJ</td></tr>
+        <tr><td>Titre secondaire (« Merci… »)</td><td>Rajdhani</td><td>600</td><td>38 px</td><td>8 px</td><td>MAJ</td></tr>
+        <tr><td>Sous-titre principal</td><td>Share Tech Mono</td><td>—</td><td>18 px</td><td>6 px</td><td>MAJ</td></tr>
+        <tr><td>Heure</td><td>Share Tech Mono</td><td>—</td><td>22 px</td><td>2 px</td><td>—</td></tr>
+        <tr><td>Date</td><td>Share Tech Mono</td><td>—</td><td>11 px</td><td>1 px</td><td>—</td></tr>
+        <tr><td>Labels données (FOLLOW, CAM…)</td><td>Share Tech Mono</td><td>—</td><td>8–9 px</td><td>3–4 px</td><td>MAJ</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Import : <code>family=Rajdhani:wght@400;600;700&amp;family=Share+Tech+Mono</code> via Google Fonts.</p>
+  </section>
+
+  <!-- ===================== 03 SIGNATURES ===================== -->
+  <section id="signatures">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Éléments signatures</h2></div>
+    <p class="sec-sub">Les marqueurs récurrents qui font reconnaître la marque d'un coup d'œil. À réutiliser tels quels.</p>
+
+    <div class="demo">
+      <div class="cap">Le « o » de Toofi — toujours en bleu JUNO</div>
+      <div class="demo-name">T<span class="o">o</span>ofi</div>
+      <p class="note" style="margin-top:14px">Sur fond clair / texte vif, utiliser <code>#6478dc</code> (bleu vif) pour rester lisible. Sur nom fantôme à faible opacité, utiliser le bleu de base <code>#3c4bb0</code> à opacité réduite.</p>
+    </div>
+
+    <div class="demo">
+      <div class="cap">Nom fantôme — écrans de veille / outro</div>
+      <div class="demo-name ghost">T<span class="o">o</span>ofi</div>
+    </div>
+
+    <div class="demo">
+      <div class="cap">Bandes 4 couleurs — ordre haut : R · B · O · Y</div>
+      <div class="demo-bands">
+        <i style="background:var(--juno-red)"></i><i style="background:var(--juno-blue)"></i>
+        <i style="background:var(--juno-orange)"></i><i style="background:var(--juno-yellow)"></i>
+      </div>
+      <div style="height:10px"></div>
+      <div class="cap">Bandes 4 couleurs — ordre bas (inversé) : Y · O · B · R</div>
+      <div class="demo-bands">
+        <i style="background:var(--juno-yellow)"></i><i style="background:var(--juno-orange)"></i>
+        <i style="background:var(--juno-blue)"></i><i style="background:var(--juno-red)"></i>
+      </div>
+    </div>
+
+    <div class="demo">
+      <div class="cap">Coins — bordure 2 px, taille 14 px · TL rouge · TR jaune · BL bleu · BR orange</div>
+      <div class="demo-corners">
+        <div class="dc tl"></div><div class="dc tr"></div><div class="dc bl"></div><div class="dc br"></div>
+        <div class="dc-label">zone webcam / chat</div>
+      </div>
+    </div>
+
+    <div class="demo">
+      <div class="cap">Rack stripes latéraux — dégradé vertical des 4 couleurs (droite = miroir)</div>
+      <div class="demo-rack"><div class="rack l"></div><div class="rack r"></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="cap">LED — pastilles 4–7 px, pulsation lente désynchronisée</div>
+      <div class="demo-leds">
+        <div class="led" style="background:var(--juno-red);--d:2.1s;--dl:0s"></div>
+        <div class="led" style="background:var(--juno-blue);--d:3.2s;--dl:.5s"></div>
+        <div class="led" style="background:var(--juno-orange);--d:2.6s;--dl:1.1s"></div>
+        <div class="led" style="background:var(--juno-yellow);--d:3.8s;--dl:.3s"></div>
+      </div>
+    </div>
+
+    <div class="demo">
+      <div class="cap">Waveform — fil ivory + couche bleue, animation douce</div>
+      <canvas id="wave"></canvas>
+    </div>
+
+    <div class="demo">
+      <div class="cap">Format de date — toujours jj/mm/aaaa</div>
+      <div class="demo-date">07/06/2026<small>jamais mm/jj/aaaa ni format anglo-saxon</small></div>
+    </div>
+
+    <div class="demo">
+      <div class="cap">Textures d'ambiance (subtiles)</div>
+      <p class="note" style="margin:0">Métal brossé (lignes horizontales fines, opacité ≈ 0.02–0.03) et scanlines (lignes 3 px, opacité ≈ 0.05) sont posées en couches <code>pointer-events:none</code> par-dessus les surfaces. Présentes ici sur le fond de ce document.</p>
+    </div>
+  </section>
+
+  <!-- ===================== 04 LAYOUT ===================== -->
+  <section id="layout">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Système de layout</h2></div>
+    <p class="sec-sub">Toutes les scènes sont calées sur un canevas <strong>1920 × 1080</strong>. Les marges et épaisseurs sont normalisées via variables CSS.</p>
+
+    <h3>Schéma — layout « just chat »</h3>
+    <div class="schema">
+      <div class="schema-bands">
+        <i style="background:var(--juno-red)"></i><i style="background:var(--juno-blue)"></i>
+        <i style="background:var(--juno-orange)"></i><i style="background:var(--juno-yellow)"></i>
+      </div>
+      <div class="zone cam">Source webcam</div>
+      <div class="zone chat">Chat<br>420 px</div>
+      <div class="zone bar">Barre infos · 52 px</div>
+    </div>
+
+    <h3>Dimensions de référence</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Valeur</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td><code>canvas</code></td><td>1920 × 1080</td><td>Base de toutes les scènes</td></tr>
+        <tr><td><code>--panel inset</code></td><td>80 px</td><td>Marge du panneau central (intro / idle / outro)</td></tr>
+        <tr><td><code>--bar-h</code> (16:9)</td><td>52 px</td><td>Hauteur barre infos basse</td></tr>
+        <tr><td><code>--chat-w</code></td><td>420 px</td><td>Largeur zone chat (layout complet)</td></tr>
+        <tr><td><code>--stripe-w</code></td><td>3 px</td><td>Épaisseur liseré de pourtour</td></tr>
+        <tr><td><code>--bar-top</code> (21:9)</td><td>951 px</td><td>Haut de la bande basse pour contenu 21/9</td></tr>
+        <tr><td><code>--bar-h</code> (21:9)</td><td>129 px</td><td>Hauteur de la bande basse 21/9</td></tr>
+        <tr><td><code>--cam-w</code> (21:9)</td><td>370 px</td><td>Largeur du cadre webcam dans la bande</td></tr>
+        <tr><td>Coins</td><td>14 px / bord 2 px</td><td>Cornières de cadre</td></tr>
+        <tr><td>Liseré / bandes</td><td>3 px (jusqu'à 7 px sur l'intro)</td><td>Filets de couleur</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================== 05 COMPOSANTS ===================== -->
+  <section id="composants">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Inventaire des composants</h2></div>
+    <p class="sec-sub">Chaque scène est un fichier HTML autonome à charger comme source navigateur dans OBS.</p>
+    <table>
+      <thead><tr><th>Fichier</th><th>Rôle</th><th>Spécificités</th></tr></thead>
+      <tbody>
+        <tr><td><code>intro.html</code></td><td>Écran d'intro animé</td><td>Waveform réactive à l'audio, sous-titre « Je m'installe et j'arrive&nbsp;! », révélation en slide. Fond chassis opaque.</td></tr>
+        <tr><td><code>idle.html</code></td><td>Veille / BRB</td><td>Nom flottant, waveform d'ambiance très lente, particules. Aucun BPM. Boucle douce et permanente.</td></tr>
+        <tr><td><code>outro.html</code></td><td>Écran de fin</td><td>Texte permanent « Merci d'avoir regardé / à très bientôt · toofi », VU-mètres 4 couleurs, waveform.</td></tr>
+        <tr><td><code>overlay-16-9.html</code></td><td>Overlay barre basse 16:9</td><td>Fond transparent, barre basse seule (52 px) : marque + heure/date + follow. Pas de barre haute.</td></tr>
+        <tr><td><code>overlay-21-9.html</code></td><td>Overlay 21:9</td><td>Bande basse (y=951, h=129) + cadre webcam en coin, pour contenu ultra-large. Transparent.</td></tr>
+        <tr><td><code>webcam-frame.html</code></td><td>Cadre webcam</td><td>Liseré 4 couleurs + cornières, fond transparent. À empiler à la taille exacte de la cam.</td></tr>
+        <tr><td><code>layout-just-chat.html</code></td><td>Layout complet</td><td>Webcam à gauche, chat à droite (420 px), liseré de pourtour complet, barre infos, séparateur. Intégration Spotify possible.</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Intégrations connues : suivi <em>now playing</em> Spotify via Web Audio API (capture audio bureau), et API JS d'alertes (<code>window.alertFollow()</code>, <code>alertSub()</code>, <code>alertBits()</code>, <code>alertRaid()</code>, <code>alertHype()</code>) pour StreamElements.</p>
+  </section>
+
+  <!-- ===================== 06 HARMONISATION ===================== -->
+  <section id="harmonisation">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Points à harmoniser</h2></div>
+    <p class="sec-sub">Petites divergences relevées entre les fichiers existants. À uniformiser pour qu'un nouveau dev parte sur des valeurs canoniques.</p>
+
+    <div class="warn">
+      <div class="h">⚠ Nuance de bleu du « o »</div>
+      <p>Trois valeurs coexistent : <code>#3c4bb0</code> + <code>brightness(1.4)</code> (intro), <code>rgba(100,120,220,1)</code> ≈ <code>#6478dc</code> (barres), et <code>#3c4bb0</code> à 50–65 % d'opacité (idle/outro).</p>
+      <p><strong>Canonique proposé :</strong> bleu de base <code>#3c4bb0</code> partout, et une variante vive <code>#6478dc</code> (<code>--juno-blue-bright</code>) réservée au petit texte d'UI où le bleu pur manque de lisibilité.</p>
+    </div>
+
+    <div class="warn">
+      <div class="h">⚠ Couleur « muted »</div>
+      <p>La variable <code>--muted</code> vaut <code>#8a8880</code> (intro), <code>#a09880</code> (overlays/layout) et <code>#2e2c2a</code> (outro).</p>
+      <p><strong>Canonique proposé :</strong> <code>#a09880</code> pour le texte secondaire sur surfaces. Réserver les tons très foncés à un nom dédié si besoin de contraste sur zone claire.</p>
+    </div>
+
+    <div class="warn">
+      <div class="h">⚠ Source de suivi (follow)</div>
+      <p>Les barres affichent actuellement une liste de démo en dur. Brancher un vrai endpoint Twitch / StreamElements via le <code>updateFollow()</code> déjà prévu dans chaque fichier.</p>
+    </div>
+  </section>
+
+  <footer>
+    Charte Toofi · habillage JUNO-106 · document de référence interne · jj/mm/aaaa
+  </footer>
+
+</div>
+
+<script>
+  // ===== Palette data =====
+  const juno = [
+    ['Rouge JUNO','--juno-red','#b13a26'],
+    ['Bleu JUNO','--juno-blue','#3c4bb0'],
+    ['Orange JUNO','--juno-orange','#f87d37'],
+    ['Jaune JUNO','--juno-yellow','#e9bc3f'],
+    ['Bleu vif (UI)','--juno-blue-bright','#6478dc'],
+  ];
+  const grey = [
+    ['Chassis (fond)','--bg','#3e3e3e'],
+    ['Panneau','--panel','#636466'],
+    ['Panneau sombre','--panel-dark','#4a4a4c'],
+    ['Panneau clair','--panel-light','#7a7a7c'],
+    ['Fond chat','--chat-bg','#2a2a2c'],
+    ['Vide / cam','--void','#1a1a1a'],
+  ];
+  const text = [
+    ['Blanc chaud','--white','#f0ede8'],
+    ['Sérigraphie','--serigraph','#e8e4dc'],
+    ['Ivoire','--ivory','#f5dfa0'],
+    ['Atténué','--muted','#a09880'],
+    ['Texte foncé','--dark-text','#1a1a1a'],
+  ];
+  function lum(hex){
+    const n=parseInt(hex.slice(1),16), r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+    return (0.299*r+0.587*g+0.114*b)/255;
+  }
+  function build(list, id){
+    const wrap=document.getElementById(id);
+    list.forEach(([nm,v,hex])=>{
+      const el=document.createElement('div');
+      el.className='sw';
+      el.innerHTML=`
+        <div class="chip" style="background:${hex}">
+          <div class="copied" style="color:${lum(hex)>0.6?'#1a1a1a':'#f0ede8'}">Copié&nbsp;!</div>
+        </div>
+        <div class="meta">
+          <div class="nm">${nm}</div>
+          <div class="var">${v}</div>
+          <div class="hex">${hex.toUpperCase()}</div>
+        </div>`;
+      el.addEventListener('click',()=>{
+        navigator.clipboard && navigator.clipboard.writeText(hex.toUpperCase());
+        el.classList.add('flash');
+        setTimeout(()=>el.classList.remove('flash'),700);
+      });
+      wrap.appendChild(el);
+    });
+  }
+  build(juno,'sw-juno'); build(grey,'sw-grey'); build(text,'sw-text');
+
+  // ===== Waveform demo =====
+  const c=document.getElementById('wave'), x=c.getContext('2d');
+  function size(){ c.width=c.clientWidth; c.height=60; }
+  size(); window.addEventListener('resize',size);
+  let t=0;
+  (function draw(){
+    const W=c.width,H=c.height;
+    x.clearRect(0,0,W,H);
+    x.beginPath();
+    for(let i=0;i<W;i++){ const p=i/W;
+      const y=H/2+Math.sin(p*Math.PI*5+t*1.0)*16+Math.sin(p*Math.PI*2.5+t*0.6)*7;
+      i?x.lineTo(i,y):x.moveTo(i,y); }
+    x.strokeStyle='rgba(245,223,160,0.8)'; x.lineWidth=1.6; x.stroke();
+    x.beginPath();
+    for(let i=0;i<W;i++){ const p=i/W;
+      const y=H/2+Math.tanh(Math.sin(p*Math.PI*8+t*1.3)*2.2)*10+Math.sin(p*Math.PI*3+t*0.7)*4;
+      i?x.lineTo(i,y):x.moveTo(i,y); }
+    x.strokeStyle='rgba(60,75,176,0.5)'; x.lineWidth=1; x.stroke();
+    t+=0.02; requestAnimationFrame(draw);
+  })();
+</script>
+</body>
+</html>

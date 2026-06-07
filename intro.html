@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    /* Gris chassis Roland exacts */
+    --bg:         #3e3e3e;   /* fond extérieur boîtier */
+    --panel:      #636466;   /* surface panneau de contrôle */
+    --panel-dark: #4a4a4c;   /* zone plus sombre */
+    --panel-light:#7a7a7c;   /* reflet léger */
+
+    /* Couleurs Juno-106 exactes */
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+
+    /* Textes adaptés au fond gris métal */
+    --white:      #f0ede8;   /* blanc légèrement chaud, plus visible sur gris */
+    --serigraph:  #e8e4dc;   /* sérigraphie — blanc cassé lumineux */
+    --ivory:      #f5dfa0;   /* ivory amplifié pour contraste sur gris */
+    --muted:      #8a8880;   /* muted — reste lisible sur panel */
+    --dark-text:  #1a1a1a;   /* texte foncé pour zones claires */
+  }
+
+  body {
+    width:1920px; height:1080px;
+    background: var(--bg);
+    overflow:hidden;
+    font-family:'Rajdhani', sans-serif;
+  }
+
+  /* Texture métal brossé — lignes horizontales très fines */
+  .metal-texture {
+    position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(
+        180deg,
+        transparent 0px, transparent 2px,
+        rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0px, transparent 8px,
+        rgba(0,0,0,0.015) 8px, rgba(0,0,0,0.015) 9px
+      );
+    pointer-events:none;
+  }
+
+  /* Zone centrale — panneau de contrôle légèrement plus clair */
+  .center-panel {
+    position:absolute;
+    left:80px; right:80px;
+    top:80px; bottom:80px;
+    background: var(--panel);
+    border-radius:4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -1px 0 rgba(0,0,0,0.3),
+      0 2px 8px rgba(0,0,0,0.4);
+    opacity:0;
+    animation: panelIn 0.6s ease 0.2s forwards;
+  }
+  @keyframes panelIn { to { opacity:1; } }
+
+  /* Texture métal du panneau central */
+  .center-panel::after {
+    content:'';
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      180deg, transparent 0px, transparent 1px,
+      rgba(255,255,255,0.025) 1px, rgba(255,255,255,0.025) 2px
+    );
+    border-radius:4px;
+  }
+
+  .scanlines {
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+    );
+    pointer-events:none; z-index:100;
+  }
+
+  /* Flash intro */
+  .flash {
+    position:absolute; inset:0;
+    background: var(--juno-red);
+    opacity:0;
+    animation: flashAnim 0.2s ease 0.15s;
+    pointer-events:none; z-index:200;
+  }
+  @keyframes flashAnim { 0%{ opacity:0.12; } 100%{ opacity:0; } }
+
+  /* Bandes couleur haut/bas */
+  .color-bands-top {
+    position:absolute; top:0; left:0; right:0;
+    display:flex; height:7px;
+    transform: scaleX(0); transform-origin:left;
+    animation: bandsIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.35s forwards;
+    z-index:10;
+  }
+  .color-bands-bot {
+    position:absolute; bottom:0; left:0; right:0;
+    display:flex; height:7px;
+    transform: scaleX(0); transform-origin:right;
+    animation: bandsIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s forwards;
+    z-index:10;
+  }
+  @keyframes bandsIn { to { transform: scaleX(1); } }
+  .band { flex:1; }
+  .b-r { background:var(--juno-red);     }
+  .b-b { background:var(--juno-blue); }
+  .b-o { background:var(--juno-orange); }
+  .b-y { background:var(--juno-yellow); }
+
+  /* Rack stripes latéraux */
+  .rack-stripe {
+    position:absolute; top:0; bottom:0; width:5px; z-index:10;
+    opacity:0; animation: fadeIn 0.4s ease 1.1s forwards;
+  }
+  .rack-stripe.left  { left:0;  background:linear-gradient(180deg,var(--juno-red),var(--juno-blue),var(--juno-orange),var(--juno-yellow)); }
+  .rack-stripe.right { right:0; background:linear-gradient(180deg,var(--juno-yellow),var(--juno-orange),var(--juno-blue),var(--juno-red)); }
+
+  /* Lignes de section verticales style Roland */
+  .section-lines {
+    position:absolute; left:80px; right:80px; top:80px; bottom:80px;
+    opacity:0; animation: fadeIn 0.4s ease 1.3s forwards;
+    pointer-events:none; z-index:5;
+  }
+  .sec-line {
+    position:absolute; top:0; bottom:0; width:1px; opacity:0.15;
+  }
+
+  /* Bloc central */
+  .center-block {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    z-index:20;
+  }
+
+  /* NOM — blanc lumineux sur fond gris */
+  .main-name {
+    font-family:'Rajdhani', sans-serif;
+    font-size:148px; font-weight:700;
+    letter-spacing:28px; text-transform:uppercase;
+    color:var(--white); line-height:1;
+    clip-path: inset(0 100% 0 0);
+    animation: revealText 0.85s cubic-bezier(0.16,1,0.3,1) 0.7s forwards;
+  }
+  .main-name .p-blue { color: var(--juno-blue); filter:brightness(1.4); }
+  @keyframes revealText { to { clip-path: inset(0 0% 0 0); } }
+
+  /* Règle 4 couleurs */
+  .color-rule {
+    display:flex; align-items:center; gap:0;
+    margin-top:16px; width:760px;
+    opacity:0; animation: fadeIn 0.5s ease 1.4s forwards;
+  }
+  .cr-line { flex:1; height:1px; background:rgba(0,0,0,0.3); }
+  .cr-dots { display:flex; gap:8px; margin:0 16px; }
+  .cr-dot  { width:8px; height:8px; border-radius:50%; animation:dotPulse 2.8s ease-in-out infinite; }
+  .cr-dot.r { background:var(--juno-red);    animation-delay:0s; }
+  .cr-dot.b { background:var(--juno-blue);   animation-delay:0.4s; }
+  .cr-dot.o { background:var(--juno-orange); animation-delay:0.8s; }
+  .cr-dot.y { background:var(--juno-yellow); animation-delay:1.2s; }
+  @keyframes dotPulse {
+    0%,100%{ opacity:0.5; transform:scale(1); }
+    50%    { opacity:1;   transform:scale(1.25); }
+  }
+
+  /* Sous-texte — sérigraphie blanche nette sur gris */
+  .subtitle {
+    margin-top:26px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:18px; letter-spacing:6px;
+    color:var(--serigraph); text-transform:uppercase;
+    opacity:0; animation: fadeUp 0.7s ease 2.0s forwards;
+  }
+
+  /* Waveform */
+  .waveform-wrap {
+    margin-top:36px; width:880px; height:80px;
+    opacity:0; animation: fadeIn 0.8s ease 2.3s forwards;
+  }
+  #waveCanvas { width:100%; height:100%; display:block; }
+
+  #audioBtn {
+    position:absolute; bottom:28px; right:28px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:9px; letter-spacing:3px; text-transform:uppercase;
+    color:rgba(248,125,55,0.7);
+    background:rgba(0,0,0,0.2); border:1px solid rgba(248,125,55,0.4);
+    padding:6px 14px; cursor:pointer; display:none;
+  }
+  #audioBtn:hover { color:var(--juno-orange); border-color:var(--juno-orange); }
+
+  /* LED latérales */
+  .side-leds {
+    position:absolute; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:10px;
+    opacity:0; animation: fadeIn 0.5s ease 1.6s forwards;
+    z-index:20;
+  }
+  .side-leds.left  { left:28px; }
+  .side-leds.right { right:28px; }
+  .s-led {
+    width:5px; height:5px; border-radius:50%;
+    animation: sLedP var(--d,2.5s) ease-in-out infinite var(--dl,0s);
+  }
+  @keyframes sLedP {
+    0%,100%{ opacity:0.25; }
+    50%    { opacity:1; }
+  }
+
+  @keyframes fadeIn  { to { opacity:1; } }
+  @keyframes fadeUp  {
+    from{ opacity:0; transform:translateY(10px); }
+    to  { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── Bloc Spotify ── */
+  .spotify-wrap {
+    position:absolute;
+    bottom:28px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:14px;
+    background:rgba(0,0,0,0.22);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:4px;
+    padding:10px 20px 10px 14px;
+    min-width:340px; max-width:680px;
+    opacity:0;
+    z-index:30;
+    transition: opacity 0.5s ease;
+  }
+  .spotify-wrap.visible { opacity:1; }
+
+  /* Pochette */
+  .sp-art {
+    width:44px; height:44px; border-radius:2px;
+    background:rgba(255,255,255,0.06);
+    flex-shrink:0; overflow:hidden;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .sp-art img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  /* Icône Spotify (SVG inline vert) */
+  .sp-icon { flex-shrink:0; opacity:0.7; }
+
+  /* Textes */
+  .sp-texts { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .sp-label {
+    font-family:'Share Tech Mono', monospace;
+    font-size:8px; letter-spacing:3px; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .sp-title {
+    font-family:'Rajdhani', sans-serif;
+    font-size:16px; font-weight:600; letter-spacing:1px;
+    color:var(--white);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:460px;
+  }
+  .sp-artist {
+    font-family:'Share Tech Mono', monospace;
+    font-size:11px; letter-spacing:1px;
+    color:var(--ivory); opacity:0.75;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:460px;
+  }
+
+  /* Barre de progression */
+  .sp-progress-wrap {
+    margin-top:5px; height:2px;
+    background:rgba(255,255,255,0.1); border-radius:1px;
+    max-width:460px;
+  }
+  .sp-progress-bar {
+    height:2px; border-radius:1px;
+    background:var(--juno-orange);
+    width:0%; transition:width 1s linear;
+  }
+
+  /* Point pulsant "en cours" */
+  .sp-dot {
+    width:5px; height:5px; border-radius:50%;
+    background:#1db954; flex-shrink:0;
+    animation:spPulse 2s ease-in-out infinite;
+  }
+  @keyframes spPulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+
+  /* État "rien en cours" */
+  .sp-idle { color:var(--muted); font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px; }
+</style>
+</head>
+<body>
+
+<div class="metal-texture"></div>
+<div class="center-panel"></div>
+<div class="flash"></div>
+<div class="scanlines"></div>
+
+<div class="rack-stripe left"></div>
+<div class="rack-stripe right"></div>
+
+<div class="color-bands-top">
+  <div class="band b-r"></div><div class="band b-b"></div>
+  <div class="band b-o"></div><div class="band b-y"></div>
+</div>
+<div class="color-bands-bot">
+  <div class="band b-y"></div><div class="band b-o"></div>
+  <div class="band b-b"></div><div class="band b-r"></div>
+</div>
+
+<div class="section-lines">
+  <div class="sec-line" style="left:25%;background:var(--juno-red)"></div>
+  <div class="sec-line" style="left:50%;background:var(--juno-blue)"></div>
+  <div class="sec-line" style="left:75%;background:var(--juno-orange)"></div>
+</div>
+
+<div class="side-leds left">
+  <div class="s-led" style="background:var(--juno-red);   color:var(--juno-red);   --d:2.1s;--dl:0s"></div>
+  <div class="s-led" style="background:var(--juno-blue);  color:var(--juno-blue);  --d:3.2s;--dl:0.5s"></div>
+  <div class="s-led" style="background:var(--juno-orange);color:var(--juno-orange);--d:2.6s;--dl:1.1s"></div>
+  <div class="s-led" style="background:var(--juno-yellow);color:var(--juno-yellow);--d:3.8s;--dl:0.3s"></div>
+  <div class="s-led" style="background:var(--juno-red);   color:var(--juno-red);   --d:2.9s;--dl:1.6s"></div>
+</div>
+<div class="side-leds right">
+  <div class="s-led" style="background:var(--juno-yellow);color:var(--juno-yellow);--d:3.0s;--dl:0.8s"></div>
+  <div class="s-led" style="background:var(--juno-orange);color:var(--juno-orange);--d:2.3s;--dl:0.2s"></div>
+  <div class="s-led" style="background:var(--juno-blue);  color:var(--juno-blue);  --d:3.5s;--dl:1.3s"></div>
+  <div class="s-led" style="background:var(--juno-red);   color:var(--juno-red);   --d:2.7s;--dl:0.6s"></div>
+  <div class="s-led" style="background:var(--juno-orange);color:var(--juno-orange);--d:4.0s;--dl:1.9s"></div>
+</div>
+
+<div class="center-block">
+  <div class="main-name">T<span class="p-blue">o</span>ofi</div>
+  <div class="color-rule">
+    <div class="cr-line"></div>
+    <div class="cr-dots">
+      <div class="cr-dot r"></div><div class="cr-dot b"></div>
+      <div class="cr-dot o"></div><div class="cr-dot y"></div>
+    </div>
+    <div class="cr-line"></div>
+  </div>
+  <div class="subtitle">Je m'installe et j'arrive&nbsp;!</div>
+  <div class="waveform-wrap">
+    <canvas id="waveCanvas"></canvas>
+  </div>
+</div>
+
+<!-- ── Bloc Spotify ── -->
+<div class="spotify-wrap" id="spotifyWrap">
+  <div class="sp-art" id="spArt"><img id="spArtImg" src="" alt=""></div>
+  <svg class="sp-icon" width="18" height="18" viewBox="0 0 24 24" fill="#1db954">
+    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.516 17.318a.75.75 0 01-1.032.249c-2.827-1.727-6.39-2.118-10.583-1.161a.75.75 0 01-.334-1.463c4.588-1.047 8.52-.596 11.7 1.343a.75.75 0 01.249 1.032zm1.472-3.27a.938.938 0 01-1.29.31c-3.233-1.987-8.162-2.563-11.986-1.402a.938.938 0 11-.546-1.795c4.37-1.328 9.8-.685 13.513 1.597a.937.937 0 01.309 1.29zm.127-3.409C15.34 8.39 9.114 8.188 5.562 9.292a1.125 1.125 0 11-.653-2.154c4.124-1.25 10.978-1.008 15.303 1.573a1.125 1.125 0 01-1.097 1.928z"/>
+  </svg>
+  <div class="sp-texts">
+    <div class="sp-label">En écoute</div>
+    <div class="sp-title" id="spTitle">—</div>
+    <div class="sp-artist" id="spArtist">—</div>
+    <div class="sp-progress-wrap">
+      <div class="sp-progress-bar" id="spBar"></div>
+    </div>
+  </div>
+  <div class="sp-dot" id="spDot"></div>
+</div>
+
+<button id="audioBtn" onclick="startAudio()">Activer audio</button>
+
+<script>
+const canvas = document.getElementById('waveCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 880; canvas.height = 80;
+let analyser = null, dataArray = null, t = 0;
+
+// Dans OBS → source Navigateur → Propriétés → cocher "Capturer l'audio du bureau"
+// OBS injecte l'audio système comme entrée micro virtuelle, capturée par getUserMedia.
+let audioReady = false;
+
+async function tryAutoAudio() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    setupAnalyser(stream); return;
+  } catch(e) {}
+  drawFallback();
+}
+function startAudio() {
+  tryAutoAudio();
+}
+document.addEventListener('DOMContentLoaded', () => tryAutoAudio());
+function drawReactive() {
+  requestAnimationFrame(drawReactive);
+  analyser.getByteTimeDomainData(dataArray);
+  ctx.clearRect(0, 0, 880, 80);
+  const sw = 880 / dataArray.length;
+  ctx.beginPath();
+  for (let i = 0; i < dataArray.length; i++) {
+    const y = ((dataArray[i] / 128) - 1) * 32 + 40;
+    if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sw, y);
+  }
+  ctx.strokeStyle = 'rgba(245,223,160,0.85)'; ctx.lineWidth = 1.8; ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i < dataArray.length; i++) {
+    const v = (dataArray[i] / 128) - 1;
+    const y = Math.tanh(v * 2.2) * 20 + 40;
+    if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sw, y);
+  }
+  ctx.strokeStyle = 'rgba(60,75,176,0.55)'; ctx.lineWidth = 1; ctx.stroke();
+}
+function drawFallback() {
+  if (audioReady) return;
+  requestAnimationFrame(drawFallback);
+  ctx.clearRect(0, 0, 880, 80);
+  ctx.beginPath();
+  for (let x = 0; x < 880; x++) {
+    const p = x / 880;
+    const y = 40
+      + Math.sin((p*Math.PI*5)+t*1.1)*24
+      + Math.sin((p*Math.PI*2.5)+t*0.65)*10
+      + Math.sin((p*Math.PI*10)+t*2.0)*4;
+    if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = 'rgba(245,223,160,0.8)'; ctx.lineWidth = 1.8; ctx.stroke();
+  ctx.beginPath();
+  for (let x = 0; x < 880; x++) {
+    const p = x / 880;
+    const shaped = Math.tanh(Math.sin((p*Math.PI*8)+t*1.5)*2.2)*0.9;
+    const y = 40 + shaped*17 + Math.sin((p*Math.PI*3)+t*0.8)*5;
+    if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = 'rgba(60,75,176,0.45)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath();
+  for (let x = 0; x < 880; x++) {
+    const p = x / 880;
+    const y = 40 + Math.sin((p*Math.PI*12)+t*2.4)*8 + Math.sin((p*Math.PI*4)+t*0.9)*4;
+    if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = 'rgba(248,125,55,0.2)'; ctx.lineWidth = 0.8; ctx.stroke();
+  t += 0.024;
+}
+// ══════════════════════════════════════════════════
+// SPOTIFY — Configuration
+// ══════════════════════════════════════════════════
+// 1. Va sur https://developer.spotify.com/dashboard
+// 2. Crée une app → note Client ID et Client Secret
+// 3. Dans "Edit Settings", ajoute http://localhost:8888/callback en Redirect URI
+// 4. Exécute UNE FOIS ce flow OAuth pour obtenir un refresh_token (voir README ci-dessous)
+// 5. Colle tes valeurs ici :
+
+const SP_CLIENT_ID     = '8cb6c54e26c14f1d8b1a5fd59eeee7fa';
+const SP_CLIENT_SECRET = '9615cae3ae9e446eb2eead621b902f09';
+const SP_REFRESH_TOKEN = 'AQB4xnjProZVmivklpqYH4VPL3fMcOl8k6Ob12Af9RtKHDCdykSflYRTBh4otogXdL9hMUqizaJjUlnFZqsPOYeGDeux8OZuu4new_xusFBQoJKPX4BrhUe7f_V368ZmBQI';
+
+// ══════════════════════════════════════════════════
+
+let spAccessToken = null;
+let spTokenExpiry  = 0;
+let spProgressTimer = null;
+
+async function spRefreshToken() {
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ' + btoa(SP_CLIENT_ID + ':' + SP_CLIENT_SECRET)
+    },
+    body: new URLSearchParams({
+      grant_type:    'refresh_token',
+      refresh_token: SP_REFRESH_TOKEN
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    spAccessToken = data.access_token;
+    spTokenExpiry  = Date.now() + (data.expires_in - 60) * 1000;
+  }
+}
+
+async function spGetToken() {
+  if (!spAccessToken || Date.now() > spTokenExpiry) await spRefreshToken();
+  return spAccessToken;
+}
+
+async function spFetchNowPlaying() {
+  try {
+    const token = await spGetToken();
+    if (!token) return;
+    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.status === 204 || res.status === 404) {
+      spShowIdle(); return;
+    }
+    const data = await res.json();
+    if (!data || !data.item) { spShowIdle(); return; }
+
+    const title    = data.item.name;
+    const artist   = data.item.artists.map(a => a.name).join(', ');
+    const albumArt = data.item.album.images[1]?.url || data.item.album.images[0]?.url || '';
+    const progress = data.progress_ms;
+    const duration = data.item.duration_ms;
+    const isPlaying= data.is_playing;
+
+    spShowTrack(title, artist, albumArt, progress, duration, isPlaying);
+  } catch(e) {
+    console.warn('Spotify error:', e);
+  }
+}
+
+function spShowTrack(title, artist, artUrl, progress, duration, isPlaying) {
+  const wrap = document.getElementById('spotifyWrap');
+  document.getElementById('spTitle').textContent  = title;
+  document.getElementById('spArtist').textContent = artist;
+  const img = document.getElementById('spArtImg');
+  if (artUrl) { img.src = artUrl; img.style.display = 'block'; }
+  else          { img.style.display = 'none'; }
+
+  const dot = document.getElementById('spDot');
+  dot.style.animationPlayState = isPlaying ? 'running' : 'paused';
+  dot.style.opacity = isPlaying ? null : '0.3';
+
+  // Progression
+  clearInterval(spProgressTimer);
+  let elapsed = progress;
+  function updateBar() {
+    const pct = Math.min(100, (elapsed / duration) * 100);
+    document.getElementById('spBar').style.width = pct + '%';
+    elapsed += 1000;
+  }
+  updateBar();
+  if (isPlaying) spProgressTimer = setInterval(updateBar, 1000);
+
+  wrap.classList.add('visible');
+}
+
+function spShowIdle() {
+  const wrap = document.getElementById('spotifyWrap');
+  document.getElementById('spTitle').textContent  = 'Rien en cours';
+  document.getElementById('spArtist').textContent = '';
+  document.getElementById('spBar').style.width    = '0%';
+  document.getElementById('spDot').style.opacity  = '0.2';
+  document.getElementById('spArtImg').style.display = 'none';
+  clearInterval(spProgressTimer);
+  wrap.classList.add('visible');
+}
+
+// Ne démarre que si les tokens sont configurés
+if (SP_CLIENT_ID !== 'COLLER_TON_CLIENT_ID') {
+  spFetchNowPlaying();
+  setInterval(spFetchNowPlaying, 3000);
+}
+</script>
+</body>
+</html>

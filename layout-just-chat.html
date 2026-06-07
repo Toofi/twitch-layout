@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --panel-dark:  #3e3e3e;
+    --panel:       #636466;
+    --serigraph:   #e8e4dc;
+    --ivory:       #f5dfa0;
+    --muted:       #a09880;
+    --white:       #f0ede8;
+
+    --chat-w:      420px;  /* largeur zone chat droite */
+    --bar-h:       52px;   /* hauteur barre infos basse */
+    --stripe-w:    3px;    /* épaisseur liseré pourtour */
+  }
+
+  body {
+    width:1920px; height:1080px;
+    background: var(--panel-dark);
+    overflow:hidden;
+    font-family:'Rajdhani', sans-serif;
+  }
+
+  /* Texture métal sur toute la surface */
+  .metal {
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      180deg, transparent 0, transparent 2px,
+      rgba(255,255,255,0.016) 2px, rgba(255,255,255,0.016) 3px
+    );
+    pointer-events:none;
+  }
+
+  /* ── LISERÉ 4 COULEURS POURTOUR COMPLET ── */
+  .stripe-top {
+    position:absolute; top:0; left:0; right:0;
+    height:var(--stripe-w); display:flex; z-index:50;
+  }
+  .stripe-bot {
+    position:absolute; bottom:0; left:0; right:0;
+    height:var(--stripe-w); display:flex; z-index:50;
+  }
+  .stripe-left {
+    position:absolute; left:0; top:0; bottom:0;
+    width:var(--stripe-w); display:flex; flex-direction:column; z-index:50;
+  }
+  .stripe-right {
+    position:absolute; right:0; top:0; bottom:0;
+    width:var(--stripe-w); display:flex; flex-direction:column; z-index:50;
+  }
+  .bs   { flex:1; opacity:.9; }
+  .bs-r { background:var(--juno-red); }
+  .bs-b { background:var(--juno-blue); }
+  .bs-o { background:var(--juno-orange); }
+  .bs-y { background:var(--juno-yellow); }
+
+  /* Coins */
+  .corner { position:absolute; width:14px; height:14px; z-index:51; }
+  .corner-tl { top:0; left:0;  border-top:2px solid var(--juno-red);    border-left:2px solid var(--juno-red); }
+  .corner-tr { top:0; right:0; border-top:2px solid var(--juno-yellow);  border-right:2px solid var(--juno-yellow); }
+  .corner-bl { bottom:0; left:0;  border-bottom:2px solid var(--juno-blue);   border-left:2px solid var(--juno-blue); }
+  .corner-br { bottom:0; right:0; border-bottom:2px solid var(--juno-orange);  border-right:2px solid var(--juno-orange); }
+
+  /* ── ZONE WEBCAM — gauche, plein écran moins barre basse et liseré ── */
+  .cam-zone {
+    position:absolute;
+    left:var(--stripe-w);
+    top:var(--stripe-w);
+    right:var(--chat-w);
+    bottom:var(--bar-h);
+    background: #1a1a1a; /* fond sombre si pas de source cam */
+    overflow:hidden;
+  }
+  /* Placeholder texte cam */
+  .cam-placeholder {
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px; letter-spacing:4px; text-transform:uppercase;
+    color:rgba(160,152,128,0.25);
+  }
+
+  /* Séparation verticale cam / chat */
+  .cam-chat-sep {
+    position:absolute;
+    top:var(--stripe-w);
+    right:var(--chat-w);
+    bottom:var(--bar-h);
+    width:1px;
+    background:rgba(255,255,255,0.08);
+    z-index:10;
+  }
+
+  /* ── ZONE CHAT — droite ── */
+  .chat-zone {
+    position:absolute;
+    top:var(--stripe-w);
+    right:var(--stripe-w);
+    width:calc(var(--chat-w) - var(--stripe-w));
+    bottom:var(--bar-h);
+    background: #2a2a2c;
+    display:flex; flex-direction:column;
+  }
+
+  /* En-tête chat */
+  .chat-header {
+    padding:14px 16px 10px;
+    border-bottom:1px solid rgba(255,255,255,0.07);
+    display:flex; align-items:center; gap:8px;
+    flex-shrink:0;
+  }
+  .chat-header-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--juno-blue);
+    animation:chPulse 3s ease-in-out infinite;
+  }
+  @keyframes chPulse { 0%,100%{opacity:.3;} 50%{opacity:1;} }
+  .chat-header-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:9px; letter-spacing:4px; text-transform:uppercase;
+    color:rgba(160,152,128,0.6);
+  }
+
+  /* Corps du chat — espace libre pour la source OBS Browser/Dock */
+  .chat-body {
+    flex:1;
+    /* Laisser transparent pour y superposer une source chat OBS
+       (StreamElements widget, Twitch chat overlay, etc.) */
+    background:transparent;
+    position:relative;
+  }
+  .chat-body-hint {
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:8px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:9px; letter-spacing:3px; text-transform:uppercase;
+    color:rgba(160,152,128,0.2);
+    text-align:center; padding:20px;
+    line-height:1.8;
+  }
+
+  /* Bande décorative couleur en haut du chat */
+  .chat-top-stripe {
+    height:3px; display:flex; flex-shrink:0;
+  }
+
+  /* ── BARRE INFOS BAS ── */
+  .bar {
+    position:absolute;
+    bottom:0; left:0; right:0;
+    height:var(--bar-h);
+    background:var(--panel-dark);
+    z-index:20;
+  }
+  .bar::before {
+    content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      180deg, transparent 0, transparent 2px,
+      rgba(255,255,255,0.018) 2px, rgba(255,255,255,0.018) 3px
+    );
+  }
+  /* Liseré haut de barre */
+  .bar-top-stripe {
+    position:absolute; top:0; left:0; right:0;
+    height:3px; display:flex; z-index:21;
+  }
+
+  .bar-content {
+    position:absolute; inset:0;
+    display:flex; align-items:center;
+    padding:0 20px; gap:0;
+    z-index:22;
+  }
+
+  /* Pseudo */
+  .brand { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .brand-name {
+    font-family:'Rajdhani',sans-serif;
+    font-size:20px; font-weight:700;
+    letter-spacing:5px; text-transform:uppercase;
+    color:rgba(240,237,232,0.55);
+  }
+  .brand-name .p-blue { color:rgba(100,120,220,0.9); }
+  .brand-leds { display:flex; gap:5px; }
+  .b-led {
+    width:4px; height:4px; border-radius:50%;
+    animation:bLed var(--d,3s) ease-in-out infinite var(--dl,0s);
+  }
+  @keyframes bLed { 0%,80%,100%{opacity:.15;} 40%{opacity:.8;} }
+
+  .vsep {
+    width:1px; height:26px;
+    background:rgba(255,255,255,0.1);
+    margin:0 24px; flex-shrink:0;
+  }
+
+  .time-block { flex-shrink:0; display:flex; align-items:baseline; gap:8px; }
+  .time-val {
+    font-family:'Share Tech Mono',monospace;
+    font-size:22px; color:var(--ivory);
+    letter-spacing:2px; line-height:1;
+  }
+  .date-val {
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px; color:var(--muted); letter-spacing:1px;
+  }
+
+  .follow-block { flex-shrink:0; display:flex; align-items:center; gap:7px; }
+  .follow-dot {
+    width:5px; height:5px; border-radius:50%;
+    background:var(--juno-red); flex-shrink:0;
+    animation:fpulse 3s ease-in-out infinite;
+  }
+  @keyframes fpulse { 0%,100%{opacity:.35;} 50%{opacity:1;} }
+  .follow-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:8px; letter-spacing:3px; text-transform:uppercase;
+    color:var(--muted); flex-shrink:0;
+  }
+  .follow-name {
+    font-family:'Rajdhani',sans-serif;
+    font-size:15px; font-weight:600;
+    color:var(--serigraph); letter-spacing:1px;
+    max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+
+  /* Scanlines barre */
+  .scanlines {
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 4px
+    );
+    pointer-events:none; z-index:23;
+  }
+
+  /* ── Bloc Spotify dans la barre ── */
+  .sp-block {
+    flex-shrink:0; display:flex; align-items:center; gap:8px;
+    min-width:0; overflow:hidden;
+  }
+  .sp-icon { flex-shrink:0; opacity:0.6; }
+  .sp-dot-led {
+    width:4px; height:4px; border-radius:50%;
+    background:#1db954; flex-shrink:0;
+    animation:spLed 2s ease-in-out infinite;
+  }
+  @keyframes spLed { 0%,100%{opacity:.25;} 50%{opacity:1;} }
+  .sp-track-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:8px; letter-spacing:3px; text-transform:uppercase;
+    color:var(--muted); flex-shrink:0;
+  }
+  .sp-track-text {
+    font-family:'Rajdhani',sans-serif;
+    font-size:15px; font-weight:600; letter-spacing:0.5px;
+    color:var(--serigraph);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:320px;
+  }
+  .sp-track-text .sp-artist {
+    color:var(--ivory); opacity:0.65;
+    font-weight:400; font-size:13px;
+  }
+  /* Art pochette miniature */
+  .sp-thumb {
+    width:28px; height:28px; border-radius:2px;
+    object-fit:cover; flex-shrink:0;
+    border:1px solid rgba(255,255,255,0.08);
+    display:none;
+  }
+  .sp-thumb.loaded { display:block; }
+</style>
+</head>
+<body>
+
+<div class="metal"></div>
+
+<!-- Liseré pourtour complet -->
+<div class="stripe-top">
+  <div class="bs bs-r"></div><div class="bs bs-b"></div>
+  <div class="bs bs-o"></div><div class="bs bs-y"></div>
+</div>
+<div class="stripe-bot">
+  <div class="bs bs-y"></div><div class="bs bs-o"></div>
+  <div class="bs bs-b"></div><div class="bs bs-r"></div>
+</div>
+<div class="stripe-left">
+  <div class="bs bs-r"></div><div class="bs bs-b"></div>
+  <div class="bs bs-o"></div><div class="bs bs-y"></div>
+</div>
+<div class="stripe-right">
+  <div class="bs bs-y"></div><div class="bs bs-o"></div>
+  <div class="bs bs-b"></div><div class="bs bs-r"></div>
+</div>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<!-- Zone webcam -->
+<div class="cam-zone">
+  <div class="cam-placeholder">Source webcam OBS</div>
+</div>
+
+<!-- Séparateur -->
+<div class="cam-chat-sep"></div>
+
+<!-- Zone chat -->
+<div class="chat-zone">
+  <div class="chat-top-stripe">
+    <div class="bs bs-b"></div><div class="bs bs-o"></div>
+    <div class="bs bs-y"></div><div class="bs bs-r"></div>
+  </div>
+  <div class="chat-header">
+    <div class="chat-header-dot"></div>
+    <div class="chat-header-label">Chat</div>
+  </div>
+  <div class="chat-body">
+    <div class="chat-body-hint">
+      Placer ici<br>la source chat OBS<br>(StreamElements /<br>Twitch overlay)
+    </div>
+  </div>
+</div>
+
+<!-- Barre infos bas -->
+<div class="bar">
+  <div class="bar-top-stripe">
+    <div class="bs bs-r"></div><div class="bs bs-b"></div>
+    <div class="bs bs-o"></div><div class="bs bs-y"></div>
+  </div>
+  <div class="bar-content">
+    <div class="brand">
+      <div class="brand-name">T<span class="p-blue">o</span>ofi</div>
+      <div class="brand-leds">
+        <div class="b-led" style="background:var(--juno-red);   --d:4s;  --dl:0s"></div>
+        <div class="b-led" style="background:var(--juno-blue);  --d:5s;  --dl:.7s"></div>
+        <div class="b-led" style="background:var(--juno-orange);--d:3.5s;--dl:1.4s"></div>
+        <div class="b-led" style="background:var(--juno-yellow);--d:4.5s;--dl:2.1s"></div>
+      </div>
+    </div>
+    <div class="vsep"></div>
+    <div class="time-block">
+      <div class="time-val" id="clock">--:--</div>
+      <div class="date-val" id="datestr">--/--/----</div>
+    </div>
+    <div class="vsep"></div>
+    <div class="follow-block">
+      <div class="follow-dot"></div>
+      <div class="follow-label">Follow</div>
+      <div class="follow-name" id="followName">En attente…</div>
+    </div>
+    <div class="vsep"></div>
+    <!-- Spotify -->
+    <div class="sp-block" id="spBlock">
+      <svg class="sp-icon" width="14" height="14" viewBox="0 0 24 24" fill="#1db954">
+        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.516 17.318a.75.75 0 01-1.032.249c-2.827-1.727-6.39-2.118-10.583-1.161a.75.75 0 01-.334-1.463c4.588-1.047 8.52-.596 11.7 1.343a.75.75 0 01.249 1.032zm1.472-3.27a.938.938 0 01-1.29.31c-3.233-1.987-8.162-2.563-11.986-1.402a.938.938 0 11-.546-1.795c4.37-1.328 9.8-.685 13.513 1.597a.937.937 0 01.309 1.29zm.127-3.409C15.34 8.39 9.114 8.188 5.562 9.292a1.125 1.125 0 11-.653-2.154c4.124-1.25 10.978-1.008 15.303 1.573a1.125 1.125 0 01-1.097 1.928z"/>
+      </svg>
+      <div class="sp-dot-led" id="spDotLed"></div>
+      <div class="sp-track-label">On air</div>
+      <img class="sp-thumb" id="spThumb" src="" alt="">
+      <div class="sp-track-text" id="spTrackText">—</div>
+    </div>
+    </div>
+  </div>
+  <div class="scanlines"></div>
+</div>
+
+<script>
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  const dd = String(n.getDate()).padStart(2,'0');
+  const mm = String(n.getMonth()+1).padStart(2,'0');
+  document.getElementById('datestr').textContent = `${dd}/${mm}/${n.getFullYear()}`;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+function updateFollow(name){ document.getElementById('followName').textContent = name||'En attente…'; }
+
+const TWITCH_CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
+const TWITCH_CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
+const TWITCH_REFRESH_TOKEN = 'bq6m4047vp3pn7n8rzy2k9dpfkthjhqs7xcy33a7cqhk3d5d5e';
+const TWITCH_BROADCASTER   = '44582688';
+
+let twAccessToken = null, twTokenExpiry = 0, lastFollower = null;
+
+async function twGetToken() {
+  if (twAccessToken && Date.now() < twTokenExpiry) return twAccessToken;
+  const res = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id:     TWITCH_CLIENT_ID,
+      client_secret: TWITCH_CLIENT_SECRET,
+      refresh_token: TWITCH_REFRESH_TOKEN,
+      grant_type:    'refresh_token',
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    twAccessToken = data.access_token;
+    twTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  }
+  return twAccessToken;
+}
+
+async function fetchLatestFollower() {
+  try {
+    const token = await twGetToken();
+    if (!token) return;
+    const res = await fetch(
+      `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${TWITCH_BROADCASTER}&first=1`,
+      { headers: { 'Client-Id': TWITCH_CLIENT_ID, 'Authorization': 'Bearer ' + token } }
+    );
+    const data = await res.json();
+    const name = data.data?.[0]?.user_name;
+    if (name && name !== lastFollower) { lastFollower = name; updateFollow(name); }
+  } catch(e) {}
+}
+fetchLatestFollower();
+setInterval(fetchLatestFollower, 30000);
+
+// ══════════════════════════════════════════════════
+// SPOTIFY — coller les mêmes valeurs que dans intro.html
+// ══════════════════════════════════════════════════
+const SP_CLIENT_ID     = '8cb6c54e26c14f1d8b1a5fd59eeee7fa';
+const SP_CLIENT_SECRET = '9615cae3ae9e446eb2eead621b902f09';
+const SP_REFRESH_TOKEN = 'AQB4xnjProZVmivklpqYH4VPL3fMcOl8k6Ob12Af9RtKHDCdykSflYRTBh4otogXdL9hMUqizaJjUlnFZqsPOYeGDeux8OZuu4new_xusFBQoJKPX4BrhUe7f_V368ZmBQI';
+// ══════════════════════════════════════════════════
+
+let spAccessToken = null;
+let spTokenExpiry  = 0;
+
+async function spRefreshToken() {
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ' + btoa(SP_CLIENT_ID + ':' + SP_CLIENT_SECRET)
+    },
+    body: new URLSearchParams({
+      grant_type:    'refresh_token',
+      refresh_token: SP_REFRESH_TOKEN
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    spAccessToken = data.access_token;
+    spTokenExpiry  = Date.now() + (data.expires_in - 60) * 1000;
+  }
+}
+
+async function spGetToken() {
+  if (!spAccessToken || Date.now() > spTokenExpiry) await spRefreshToken();
+  return spAccessToken;
+}
+
+async function spFetchNowPlaying() {
+  try {
+    const token = await spGetToken();
+    if (!token) return;
+    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.status === 204 || res.status === 404) { spShowIdle(); return; }
+    const data = await res.json();
+    if (!data || !data.item) { spShowIdle(); return; }
+
+    const title  = data.item.name;
+    const artist = data.item.artists.map(a => a.name).join(', ');
+    const artUrl = data.item.album.images[2]?.url || data.item.album.images[0]?.url || '';
+    const isPlaying = data.is_playing;
+
+    const trackText = document.getElementById('spTrackText');
+    trackText.innerHTML = `${title} <span class="sp-artist">· ${artist}</span>`;
+
+    const thumb = document.getElementById('spThumb');
+    if (artUrl) {
+      thumb.src = artUrl;
+      thumb.classList.add('loaded');
+    } else {
+      thumb.classList.remove('loaded');
+    }
+
+    const dot = document.getElementById('spDotLed');
+    dot.style.animationPlayState = isPlaying ? 'running' : 'paused';
+    dot.style.opacity = isPlaying ? null : '0.2';
+
+  } catch(e) {
+    console.warn('Spotify error:', e);
+  }
+}
+
+function spShowIdle() {
+  document.getElementById('spTrackText').textContent = '—';
+  document.getElementById('spThumb').classList.remove('loaded');
+  document.getElementById('spDotLed').style.opacity = '0.2';
+}
+
+if (SP_CLIENT_ID !== 'COLLER_TON_CLIENT_ID') {
+  spFetchNowPlaying();
+  setInterval(spFetchNowPlaying, 3000);
+}
+</script>
+</body>
+</html>

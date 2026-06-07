@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    width:100vw; height:100vh;
+    background:#111;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    font-family:'Share Tech Mono', monospace;
+    color:#aaa;
+    gap:20px;
+  }
+  canvas { border:1px solid #333; max-width:640px; max-height:360px; }
+  #status { font-size:13px; letter-spacing:2px; text-transform:uppercase; }
+  #btn {
+    padding:10px 32px;
+    background:rgba(177,58,38,0.2); color:#f5dfa0;
+    border:1px solid rgba(177,58,38,0.5);
+    font-family:'Share Tech Mono',monospace;
+    font-size:13px; letter-spacing:3px; text-transform:uppercase;
+    cursor:pointer; border-radius:2px;
+    transition:background .2s;
+  }
+  #btn:hover { background:rgba(177,58,38,0.4); }
+  #btn:disabled { opacity:0.4; cursor:default; }
+  .info { font-size:11px; color:#555; letter-spacing:1px; text-align:center; line-height:1.8; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="status">Prêt</div>
+<button id="btn" onclick="generate()">⬇ Générer transition-sweep.webm</button>
+<div class="info">
+  Résolution : 1920 × 1080 · Durée : ~1.6s · 60fps<br>
+  Point de coupe OBS (stinger) : 800ms
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const W = 1920, H = 1080;
+const COLORS  = ['#b13a26', '#3c4bb0', '#f87d37', '#e9bc3f'];
+const BAND_H  = H / 4;
+
+// Timeline (ms)
+const ENTER_DUR  = 400;
+const STAGGER    = 65;
+const HOLD_START = 3 * STAGGER + ENTER_DUR;  // ≈ 595ms
+const HOLD_DUR   = 400;
+const EXIT_START = HOLD_START + HOLD_DUR;     // ≈ 995ms
+const EXIT_DUR   = 380;
+const TOTAL      = EXIT_START + 3 * STAGGER + EXIT_DUR + 80; // ≈ 1670ms
+
+function easeIn(t)  { return t * t * t; }
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+// Calcule la position X du bord gauche de la bande i à l'instant t (ms)
+function bandX(i, t) {
+  const enterStart = i * STAGGER;
+  const enterEnd   = enterStart + ENTER_DUR;
+  const exitStart  = EXIT_START + i * STAGGER;
+  const exitEnd    = exitStart + EXIT_DUR;
+
+  if (t < enterStart) return -W;
+  if (t < enterEnd)   return -W + W * easeIn((t - enterStart) / ENTER_DUR);
+  if (t < exitStart)  return 0;
+  if (t < exitEnd)    return W * easeOut((t - exitStart) / EXIT_DUR);
+  return W;
+}
+
+function drawFrame(t) {
+  ctx.clearRect(0, 0, W, H);
+
+  for (let i = 0; i < 4; i++) {
+    const x = bandX(i, t);
+    const y = i * BAND_H;
+    ctx.fillStyle = COLORS[i];
+    ctx.fillRect(x, y, W, BAND_H);
+
+    // Ombre sur le bord droit pour la profondeur
+    if (x < W) {
+      const grad = ctx.createLinearGradient(x + W - 50, 0, x + W, 0);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, W, BAND_H);
+    }
+  }
+
+  // Scanlines
+  ctx.fillStyle = 'rgba(0,0,0,0.07)';
+  for (let y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1);
+}
+
+async function generate() {
+  const btn    = document.getElementById('btn');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+
+  const FPS    = 60;
+  const FRAMES = Math.ceil(TOTAL / 1000 * FPS);
+  const MS_PER_FRAME = 1000 / FPS;
+
+  status.textContent = 'Initialisation…';
+
+  // Dessine une frame pour vérifier
+  drawFrame(0);
+
+  // Capture le stream canvas
+  const stream   = canvas.captureStream(FPS);
+  const recorder = new MediaRecorder(stream, {
+    mimeType: 'video/webm;codecs=vp9',
+    videoBitsPerSecond: 12_000_000,
+  });
+
+  const chunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'transition-sweep.webm';
+    a.click();
+    URL.revokeObjectURL(url);
+    status.textContent = '✓ Téléchargé ! Importe dans OBS → Transitions → Stinger';
+    btn.disabled = false;
+  };
+
+  recorder.start();
+
+  // Rend les frames une par une en temps réel
+  let frame = 0;
+  function renderNext() {
+    if (frame >= FRAMES) {
+      recorder.stop();
+      return;
+    }
+    const t = frame * MS_PER_FRAME;
+    drawFrame(t);
+    status.textContent = `Rendu… ${Math.round((frame / FRAMES) * 100)}%`;
+    frame++;
+    requestAnimationFrame(renderNext);
+  }
+  requestAnimationFrame(renderNext);
+}
+
+// Prévisualisation en boucle
+let previewT = 0;
+function preview() {
+  drawFrame(previewT);
+  previewT += 1000 / 60;
+  if (previewT > TOTAL + 400) previewT = 0;
+  requestAnimationFrame(preview);
+}
+preview();
+</script>
+</body>
+</html>

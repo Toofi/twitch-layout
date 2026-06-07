@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg:          #3e3e3e;
+    --panel:       #636466;
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --white:       #f0ede8;
+    --ivory:       #f5dfa0;
+    --muted:       #8a8880;
+  }
+
+  body {
+    width:1920px; height:1080px;
+    background:var(--bg);
+    overflow:hidden;
+  }
+
+  /* Texture métal brossé */
+  .metal-texture {
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      180deg, transparent 0px, transparent 2px,
+      rgba(255,255,255,0.025) 2px, rgba(255,255,255,0.025) 3px
+    );
+    pointer-events:none;
+  }
+
+  /* Zone panneau central légèrement plus claire */
+  .center-panel {
+    position:absolute;
+    left:80px; right:80px; top:80px; bottom:80px;
+    background:var(--panel);
+    border-radius:4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.1),
+      inset 0 -1px 0 rgba(0,0,0,0.25),
+      0 2px 8px rgba(0,0,0,0.35);
+  }
+
+  .scanlines {
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 4px
+    );
+    pointer-events:none; z-index:100;
+  }
+
+  
+    50%    { opacity:1;   transform:translate(-50%,-50%) scale(1.07); }
+  }
+
+  #waveCanvas {
+    position:absolute; left:0;
+    top:50%; transform:translateY(-50%);
+    width:1920px; height:220px;
+  }
+
+  /* Bandes couleur fines haut/bas */
+  .band-top, .band-bot {
+    position:absolute; left:0; right:0;
+    display:flex; height:5px; z-index:10;
+  }
+  .band-top { top:0; }
+  .band-bot { bottom:0; }
+  .b { flex:1; opacity:0.9; }
+  .b-r { background:var(--juno-red); }
+  .b-b { background:var(--juno-blue); }
+  .b-o { background:var(--juno-orange); }
+  .b-y { background:var(--juno-yellow); }
+
+  /* Rack stripes */
+  .rack-stripe {
+    position:absolute; top:0; bottom:0; width:5px; z-index:10; opacity:0.7;
+  }
+  .rack-stripe.left  { left:0;  background:linear-gradient(180deg,var(--juno-red),var(--juno-blue),var(--juno-orange),var(--juno-yellow)); }
+  .rack-stripe.right { right:0; background:linear-gradient(180deg,var(--juno-yellow),var(--juno-orange),var(--juno-blue),var(--juno-red)); }
+
+  /* NOM — seul texte, semi-transparent mais lisible sur gris */
+  .name-wrap {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    animation:floatName 8s ease-in-out infinite;
+    pointer-events:none; z-index:20;
+  }
+  @keyframes floatName {
+    0%,100%{ transform:translate(-50%,-52%); }
+    50%    { transform:translate(-50%,-48%); }
+  }
+  .main-name {
+    font-family:'Rajdhani', sans-serif;
+    font-size:96px; font-weight:700;
+    letter-spacing:22px; text-transform:uppercase;
+    /* Sur gris métal : blanc semi-transparent reste lisible */
+    color:rgba(240,237,232,0.18);
+    line-height:1;
+    animation:namePulse 7s ease-in-out infinite;
+  }
+  .main-name .p-blue {
+    color:rgba(60,75,176,0.5);
+    animation:namePulse 7s ease-in-out infinite 1s;
+  }
+  @keyframes namePulse {
+    0%,100%{ opacity:0.7; }
+    50%    { opacity:1; }
+  }
+
+  /* Particules */
+  .particles { position:absolute; inset:0; pointer-events:none; z-index:15; }
+  .p {
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    opacity:0;
+    animation:pDrift var(--pd,13s) ease-in-out infinite var(--dl,0s);
+  }
+  @keyframes pDrift {
+    0%  { opacity:0; transform:translateY(0) translateX(0); }
+    15% { opacity:0.6; }
+    85% { opacity:0.3; }
+    100%{ opacity:0; transform:translateY(-70px) translateX(12px); }
+  }
+
+  /* LED latérales dormantes */
+  .side-leds {
+    position:absolute; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:12px; z-index:20;
+  }
+  .side-leds.left  { left:28px; }
+  .side-leds.right { right:28px; }
+  .s-led {
+    width:5px; height:5px; border-radius:50%;
+    animation:sleepLed var(--d,5s) ease-in-out infinite var(--dl,0s);
+  }
+  @keyframes sleepLed {
+    0%,75%,100%{ opacity:0.15; }
+    38%        { opacity:0.7; }
+  }
+
+  /* Ligne automation basse */
+  .auto-line {
+    position:absolute; bottom:80px; left:0; right:0; height:40px;
+    opacity:0.3;
+    animation:autoFloat 12s ease-in-out infinite;
+    z-index:15;
+  }
+  @keyframes autoFloat {
+    0%,100%{ transform:translateY(0); opacity:0.25; }
+    50%    { transform:translateY(-5px); opacity:0.4; }
+  }
+
+  /* Message idle */
+  .idle-msg {
+    position:absolute;
+    bottom:130px; left:50%; transform:translateX(-50%);
+    font-family:'Share Tech Mono', monospace;
+    font-size:16px; letter-spacing:5px; text-transform:uppercase;
+    color:rgba(240,237,232,0.35);
+    white-space:nowrap;
+    animation:idleMsgPulse 6s ease-in-out infinite;
+    z-index:20;
+  }
+  @keyframes idleMsgPulse {
+    0%,100%{ opacity:0.25; }
+    50%    { opacity:0.55; }
+  }
+
+  /* ── Bloc Spotify ── */
+  .spotify-wrap {
+    position:absolute;
+    bottom:28px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:14px;
+    background:rgba(0,0,0,0.22);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:4px;
+    padding:10px 20px 10px 14px;
+    min-width:340px; max-width:680px;
+    opacity:0;
+    z-index:30;
+    transition: opacity 0.5s ease;
+  }
+  .spotify-wrap.visible { opacity:1; }
+
+  /* Pochette */
+  .sp-art {
+    width:44px; height:44px; border-radius:2px;
+    background:rgba(255,255,255,0.06);
+    flex-shrink:0; overflow:hidden;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .sp-art img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  /* Icône Spotify (SVG inline vert) */
+  .sp-icon { flex-shrink:0; opacity:0.7; }
+
+  /* Textes */
+  .sp-texts { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .sp-label {
+    font-family:'Share Tech Mono', monospace;
+    font-size:8px; letter-spacing:3px; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .sp-title {
+    font-family:'Rajdhani', sans-serif;
+    font-size:16px; font-weight:600; letter-spacing:1px;
+    color:var(--white);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:460px;
+  }
+  .sp-artist {
+    font-family:'Share Tech Mono', monospace;
+    font-size:11px; letter-spacing:1px;
+    color:var(--ivory); opacity:0.75;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:460px;
+  }
+
+  /* Barre de progression */
+  .sp-progress-wrap {
+    margin-top:5px; height:2px;
+    background:rgba(255,255,255,0.1); border-radius:1px;
+    max-width:460px;
+  }
+  .sp-progress-bar {
+    height:2px; border-radius:1px;
+    background:var(--juno-orange);
+    width:0%; transition:width 1s linear;
+  }
+
+  /* Point pulsant "en cours" */
+  .sp-dot {
+    width:5px; height:5px; border-radius:50%;
+    background:#1db954; flex-shrink:0;
+    animation:spPulse 2s ease-in-out infinite;
+  }
+  @keyframes spPulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+
+  /* État "rien en cours" */
+  .sp-idle { color:var(--muted); font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px; }
+</style>
+</head>
+<body>
+
+<div class="metal-texture"></div>
+<div class="center-panel"></div>
+<div class="scanlines"></div>
+
+<div class="rack-stripe left"></div>
+<div class="rack-stripe right"></div>
+
+<div class="band-top">
+  <div class="b b-r"></div><div class="b b-b"></div>
+  <div class="b b-o"></div><div class="b b-y"></div>
+</div>
+<div class="band-bot">
+  <div class="b b-y"></div><div class="b b-o"></div>
+  <div class="b b-b"></div><div class="b b-r"></div>
+</div>
+
+<div class="particles">
+  <div class="p" style="left:10%;top:72%;--pd:15s;--dl:0s;  background:var(--juno-blue)"></div>
+  <div class="p" style="left:22%;top:78%;--pd:11s;--dl:2s;  background:var(--ivory)"></div>
+  <div class="p" style="left:36%;top:74%;--pd:13s;--dl:5s;  background:var(--juno-orange)"></div>
+  <div class="p" style="left:51%;top:71%;--pd:16s;--dl:1s;  background:var(--juno-yellow)"></div>
+  <div class="p" style="left:65%;top:76%;--pd:12s;--dl:3.5s;background:var(--juno-red)"></div>
+  <div class="p" style="left:79%;top:69%;--pd:14s;--dl:4s;  background:var(--juno-blue)"></div>
+  <div class="p" style="left:90%;top:80%;--pd:10s;--dl:0.5s;background:var(--juno-orange)"></div>
+  <div class="p" style="left:6%; top:65%;--pd:17s;--dl:3s;  background:var(--juno-yellow)"></div>
+</div>
+
+<canvas id="waveCanvas"></canvas>
+
+<div class="side-leds left">
+  <div class="s-led" style="background:var(--juno-red);   --d:4.2s;--dl:0s"></div>
+  <div class="s-led" style="background:var(--juno-blue);  --d:6.1s;--dl:0.8s"></div>
+  <div class="s-led" style="background:var(--juno-orange);--d:3.8s;--dl:2.0s"></div>
+  <div class="s-led" style="background:var(--juno-yellow);--d:5.5s;--dl:1.2s"></div>
+  <div class="s-led" style="background:var(--juno-red);   --d:7.0s;--dl:0.4s"></div>
+</div>
+<div class="side-leds right">
+  <div class="s-led" style="background:var(--juno-yellow);--d:5.2s;--dl:1.5s"></div>
+  <div class="s-led" style="background:var(--juno-orange);--d:4.6s;--dl:0.3s"></div>
+  <div class="s-led" style="background:var(--juno-blue);  --d:6.8s;--dl:2.4s"></div>
+  <div class="s-led" style="background:var(--juno-red);   --d:3.5s;--dl:0.9s"></div>
+  <div class="s-led" style="background:var(--juno-orange);--d:5.9s;--dl:1.7s"></div>
+</div>
+
+<div class="name-wrap">
+  <div class="main-name">T<span class="p-blue">o</span>ofi</div>
+</div>
+
+<div class="idle-msg">Je reviens dans pas longtemps&nbsp;!</div>
+
+<div class="auto-line">
+  <svg width="1920" height="40" viewBox="0 0 1920 40">
+    <path id="ap1" fill="none" stroke="rgba(60,75,176,0.6)"   stroke-width="1"   d=""/>
+    <path id="ap2" fill="none" stroke="rgba(248,125,55,0.45)" stroke-width="0.7" d=""/>
+    <path id="ap3" fill="none" stroke="rgba(233,188,63,0.35)" stroke-width="0.6" d=""/>
+  </svg>
+</div>
+
+<!-- ── Bloc Spotify ── -->
+<div class="spotify-wrap" id="spotifyWrap">
+  <div class="sp-art" id="spArt"><img id="spArtImg" src="" alt=""></div>
+  <svg class="sp-icon" width="18" height="18" viewBox="0 0 24 24" fill="#1db954">
+    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.516 17.318a.75.75 0 01-1.032.249c-2.827-1.727-6.39-2.118-10.583-1.161a.75.75 0 01-.334-1.463c4.588-1.047 8.52-.596 11.7 1.343a.75.75 0 01.249 1.032zm1.472-3.27a.938.938 0 01-1.29.31c-3.233-1.987-8.162-2.563-11.986-1.402a.938.938 0 11-.546-1.795c4.37-1.328 9.8-.685 13.513 1.597a.937.937 0 01.309 1.29zm.127-3.409C15.34 8.39 9.114 8.188 5.562 9.292a1.125 1.125 0 11-.653-2.154c4.124-1.25 10.978-1.008 15.303 1.573a1.125 1.125 0 01-1.097 1.928z"/>
+  </svg>
+  <div class="sp-texts">
+    <div class="sp-label">En écoute</div>
+    <div class="sp-title" id="spTitle">—</div>
+    <div class="sp-artist" id="spArtist">—</div>
+    <div class="sp-progress-wrap">
+      <div class="sp-progress-bar" id="spBar"></div>
+    </div>
+  </div>
+  <div class="sp-dot" id="spDot"></div>
+</div>
+
+<script>
+const canvas = document.getElementById('waveCanvas');
+canvas.width = 1920; canvas.height = 220;
+const ctx = canvas.getContext('2d');
+let t = 0;
+
+function draw() {
+  ctx.clearRect(0, 0, 1920, 220);
+  ctx.beginPath();
+  for (let x = 0; x < 1920; x++) {
+    const p = x / 1920;
+    const y = 110
+      + Math.sin((p*Math.PI*5.5)+t*0.38)*30
+      + Math.sin((p*Math.PI*2.8)+t*0.22)*14
+      + Math.sin((p*Math.PI*8.5)+t*0.55)*6;
+    if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = 'rgba(245,223,160,0.22)'; ctx.lineWidth = 1.6; ctx.stroke();
+
+  ctx.beginPath();
+  for (let x = 0; x < 1920; x++) {
+    const p = x / 1920;
+    const shaped = Math.tanh(Math.sin((p*Math.PI*9)+t*0.52)*2.4)*0.88;
+    const y = 110 + shaped*18 + Math.sin((p*Math.PI*3.5)+t*0.28)*7;
+    if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = 'rgba(60,75,176,0.18)'; ctx.lineWidth = 1; ctx.stroke();
+
+  ctx.beginPath();
+  for (let x = 0; x < 1920; x++) {
+    const p = x / 1920;
+    const y = 110 + Math.sin((p*Math.PI*14)+t*0.7)*10 + Math.sin((p*Math.PI*5)+t*0.35)*5;
+    if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = 'rgba(248,125,55,0.12)'; ctx.lineWidth = 0.8; ctx.stroke();
+
+  t += 0.007;
+  requestAnimationFrame(draw);
+}
+draw();
+
+function updateAuto() {
+  const now = Date.now() / 1000;
+  let d1='M0,20', d2='M0,22', d3='M0,18';
+  for (let i = 1; i <= 48; i++) {
+    const x = (i/48)*1920;
+    const y1 = 20+Math.sin(i*0.38+now*0.18)*10+Math.sin(i*0.85+now*0.11)*4;
+    const y2 = 22+Math.sin(i*0.28+now*0.15+1)*8+Math.sin(i*0.65+now*0.08)*3;
+    const y3 = 18+Math.sin(i*0.48+now*0.22+2)*6+Math.sin(i*0.72+now*0.13)*2;
+    d1+=` L${x.toFixed(1)},${y1.toFixed(1)}`;
+    d2+=` L${x.toFixed(1)},${y2.toFixed(1)}`;
+    d3+=` L${x.toFixed(1)},${y3.toFixed(1)}`;
+  }
+  document.getElementById('ap1').setAttribute('d',d1);
+  document.getElementById('ap2').setAttribute('d',d2);
+  document.getElementById('ap3').setAttribute('d',d3);
+  requestAnimationFrame(updateAuto);
+}
+updateAuto();
+
+// ══════════════════════════════════════════════════
+// SPOTIFY — Configuration
+// ══════════════════════════════════════════════════
+const SP_CLIENT_ID     = '8cb6c54e26c14f1d8b1a5fd59eeee7fa';
+const SP_CLIENT_SECRET = '9615cae3ae9e446eb2eead621b902f09';
+const SP_REFRESH_TOKEN = 'AQB4xnjProZVmivklpqYH4VPL3fMcOl8k6Ob12Af9RtKHDCdykSflYRTBh4otogXdL9hMUqizaJjUlnFZqsPOYeGDeux8OZuu4new_xusFBQoJKPX4BrhUe7f_V368ZmBQI';
+// ══════════════════════════════════════════════════
+
+let spAccessToken = null;
+let spTokenExpiry  = 0;
+let spProgressTimer = null;
+
+async function spRefreshToken() {
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ' + btoa(SP_CLIENT_ID + ':' + SP_CLIENT_SECRET)
+    },
+    body: new URLSearchParams({
+      grant_type:    'refresh_token',
+      refresh_token: SP_REFRESH_TOKEN
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    spAccessToken = data.access_token;
+    spTokenExpiry  = Date.now() + (data.expires_in - 60) * 1000;
+  }
+}
+
+async function spGetToken() {
+  if (!spAccessToken || Date.now() > spTokenExpiry) await spRefreshToken();
+  return spAccessToken;
+}
+
+async function spFetchNowPlaying() {
+  try {
+    const token = await spGetToken();
+    if (!token) return;
+    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.status === 204 || res.status === 404) {
+      spShowIdle(); return;
+    }
+    const data = await res.json();
+    if (!data || !data.item) { spShowIdle(); return; }
+
+    const title    = data.item.name;
+    const artist   = data.item.artists.map(a => a.name).join(', ');
+    const albumArt = data.item.album.images[1]?.url || data.item.album.images[0]?.url || '';
+    const progress = data.progress_ms;
+    const duration = data.item.duration_ms;
+    const isPlaying= data.is_playing;
+
+    spShowTrack(title, artist, albumArt, progress, duration, isPlaying);
+  } catch(e) {
+    console.warn('Spotify error:', e);
+  }
+}
+
+function spShowTrack(title, artist, artUrl, progress, duration, isPlaying) {
+  const wrap = document.getElementById('spotifyWrap');
+  document.getElementById('spTitle').textContent  = title;
+  document.getElementById('spArtist').textContent = artist;
+  const img = document.getElementById('spArtImg');
+  if (artUrl) { img.src = artUrl; img.style.display = 'block'; }
+  else          { img.style.display = 'none'; }
+
+  const dot = document.getElementById('spDot');
+  dot.style.animationPlayState = isPlaying ? 'running' : 'paused';
+  dot.style.opacity = isPlaying ? null : '0.3';
+
+  // Progression
+  clearInterval(spProgressTimer);
+  let elapsed = progress;
+  function updateBar() {
+    const pct = Math.min(100, (elapsed / duration) * 100);
+    document.getElementById('spBar').style.width = pct + '%';
+    elapsed += 1000;
+  }
+  updateBar();
+  if (isPlaying) spProgressTimer = setInterval(updateBar, 1000);
+
+  wrap.classList.add('visible');
+}
+
+function spShowIdle() {
+  const wrap = document.getElementById('spotifyWrap');
+  document.getElementById('spTitle').textContent  = 'Rien en cours';
+  document.getElementById('spArtist').textContent = '';
+  document.getElementById('spBar').style.width    = '0%';
+  document.getElementById('spDot').style.opacity  = '0.2';
+  document.getElementById('spArtImg').style.display = 'none';
+  clearInterval(spProgressTimer);
+  wrap.classList.add('visible');
+}
+
+if (SP_CLIENT_ID !== 'COLLER_TON_CLIENT_ID') {
+  spFetchNowPlaying();
+  setInterval(spFetchNowPlaying, 3000);
+}
+</script>
+</body>
+</html>

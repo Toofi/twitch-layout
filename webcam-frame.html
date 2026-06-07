@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+  }
+  /* À utiliser en source navigateur à la taille exacte de ta webcam dans OBS.
+     Fond transparent — s'empile par-dessus la source caméra. */
+  body {
+    width:100%; height:100%;
+    background:transparent;
+    overflow:hidden;
+  }
+
+  /* Liseré 4 couleurs — 4 segments, un par côté */
+  /* HAUT */
+  .stripe-top {
+    position:absolute; top:0; left:0; right:0;
+    height:3px; display:flex;
+  }
+  /* BAS */
+  .stripe-bot {
+    position:absolute; bottom:0; left:0; right:0;
+    height:3px; display:flex;
+  }
+  /* GAUCHE — les 4 couleurs de haut en bas */
+  .stripe-left {
+    position:absolute; left:0; top:0; bottom:0;
+    width:3px; display:flex; flex-direction:column;
+  }
+  /* DROITE — les 4 couleurs inversées */
+  .stripe-right {
+    position:absolute; right:0; top:0; bottom:0;
+    width:3px; display:flex; flex-direction:column;
+  }
+
+  .bs   { flex:1; opacity:.9; }
+  .bs-r { background:var(--juno-red); }
+  .bs-b { background:var(--juno-blue); }
+  .bs-o { background:var(--juno-orange); }
+  .bs-y { background:var(--juno-yellow); }
+
+  /* Coins — 14×14px, chaque coin a la couleur du segment adjacent */
+  .corner {
+    position:absolute;
+    width:14px; height:14px;
+  }
+  .corner-tl {
+    top:0; left:0;
+    border-top:2px solid var(--juno-red);
+    border-left:2px solid var(--juno-red);
+  }
+  .corner-tr {
+    top:0; right:0;
+    border-top:2px solid var(--juno-yellow);
+    border-right:2px solid var(--juno-yellow);
+  }
+  .corner-bl {
+    bottom:0; left:0;
+    border-bottom:2px solid var(--juno-blue);
+    border-left:2px solid var(--juno-blue);
+  }
+  .corner-br {
+    bottom:0; right:0;
+    border-bottom:2px solid var(--juno-orange);
+    border-right:2px solid var(--juno-orange);
+  }
+</style>
+</head>
+<body>
+
+<div class="stripe-top">
+  <div class="bs bs-r"></div>
+  <div class="bs bs-b"></div>
+  <div class="bs bs-o"></div>
+  <div class="bs bs-y"></div>
+</div>
+
+<div class="stripe-bot">
+  <div class="bs bs-y"></div>
+  <div class="bs bs-o"></div>
+  <div class="bs bs-b"></div>
+  <div class="bs bs-r"></div>
+</div>
+
+<div class="stripe-left">
+  <div class="bs bs-r"></div>
+  <div class="bs bs-b"></div>
+  <div class="bs bs-o"></div>
+  <div class="bs bs-y"></div>
+</div>
+
+<div class="stripe-right">
+  <div class="bs bs-y"></div>
+  <div class="bs bs-o"></div>
+  <div class="bs bs-b"></div>
+  <div class="bs bs-r"></div>
+</div>
+
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+</body>
+</html>

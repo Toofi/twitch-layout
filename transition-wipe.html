@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+  }
+  body {
+    width:100vw; height:100vh;
+    background:#111;
+    overflow:hidden;
+    font-family:monospace;
+  }
+
+  .fake-scene {
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,0.08);
+    font-size:60px; letter-spacing:10px;
+    user-select:none;
+  }
+
+  /* Demi-écran gauche — s'élargit depuis le centre vers la gauche */
+  .half-l {
+    position:fixed;
+    top:0; bottom:0;
+    right:50%; width:0;
+    background:linear-gradient(90deg, var(--juno-blue) 0%, var(--juno-red) 100%);
+    transform-origin:right center;
+    will-change:width;
+  }
+
+  /* Demi-écran droit — s'élargit depuis le centre vers la droite */
+  .half-r {
+    position:fixed;
+    top:0; bottom:0;
+    left:50%; width:0;
+    background:linear-gradient(90deg, var(--juno-orange) 0%, var(--juno-yellow) 100%);
+    transform-origin:left center;
+    will-change:width;
+  }
+
+  /* Ligne centrale lumineuse */
+  .center-line {
+    position:fixed;
+    top:0; bottom:0;
+    left:50%; width:0;
+    transform:translateX(-50%);
+    box-shadow:0 0 0 0 rgba(245,223,160,0);
+    will-change:box-shadow, width;
+  }
+
+  /* Rack stripes sur les bords gauche et droit du wipe */
+  .edge-l, .edge-r {
+    position:fixed;
+    top:0; bottom:0; width:3px;
+    opacity:0;
+    will-change:opacity, left, right;
+  }
+  .edge-l {
+    left:50%;
+    background:linear-gradient(180deg, var(--juno-red), var(--juno-blue));
+  }
+  .edge-r {
+    right:50%;
+    background:linear-gradient(180deg, var(--juno-orange), var(--juno-yellow));
+  }
+
+  /* Scanlines */
+  .scanlines {
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px,
+      transparent 1px, transparent 4px
+    );
+    pointer-events:none; opacity:0;
+  }
+
+  /* ─── Animations (classe .playing) ─── */
+  .playing .half-l {
+    animation: wipeInL 0.45s 0ms cubic-bezier(.55,0,.1,1) forwards,
+               wipeOutL 0.45s 900ms cubic-bezier(.9,0,.45,1) forwards;
+  }
+  .playing .half-r {
+    animation: wipeInR 0.45s 0ms cubic-bezier(.55,0,.1,1) forwards,
+               wipeOutR 0.45s 900ms cubic-bezier(.9,0,.45,1) forwards;
+  }
+  .playing .edge-l {
+    animation: edgeInL 0.45s 0ms cubic-bezier(.55,0,.1,1) forwards,
+               edgeOutL 0.45s 900ms cubic-bezier(.9,0,.45,1) forwards;
+  }
+  .playing .edge-r {
+    animation: edgeInR 0.45s 0ms cubic-bezier(.55,0,.1,1) forwards,
+               edgeOutR 0.45s 900ms cubic-bezier(.9,0,.45,1) forwards;
+  }
+  .playing .center-line {
+    animation: centerGlow 1.4s 0ms ease forwards;
+  }
+  .playing .scanlines {
+    animation: scanShow 1.4s ease forwards;
+  }
+
+  /* Wipe in : la moitié gauche grandit vers la gauche */
+  @keyframes wipeInL  { from{width:0} to{width:50%} }
+  @keyframes wipeOutL { from{width:50%} to{width:0} }
+
+  /* Wipe in : la moitié droite grandit vers la droite */
+  @keyframes wipeInR  { from{width:0} to{width:50%} }
+  @keyframes wipeOutR { from{width:50%} to{width:0} }
+
+  /* Rack stripe gauche suit le bord du wipe-left */
+  @keyframes edgeInL  {
+    from { left:50%; opacity:0; }
+    to   { left:0%;  opacity:.85; }
+  }
+  @keyframes edgeOutL {
+    from { left:0%;  opacity:.85; }
+    to   { left:50%; opacity:0; }
+  }
+
+  /* Rack stripe droit suit le bord du wipe-right */
+  @keyframes edgeInR  {
+    from { right:50%; opacity:0; }
+    to   { right:0%;  opacity:.85; }
+  }
+  @keyframes edgeOutR {
+    from { right:0%;  opacity:.85; }
+    to   { right:50%; opacity:0; }
+  }
+
+  @keyframes centerGlow {
+    0%         { width:0;  box-shadow:0 0  0px 0 rgba(245,223,160,0);   }
+    15%        { width:3px; box-shadow:0 0 18px 4px rgba(245,223,160,0.9); }
+    40%,60%    { width:3px; box-shadow:0 0 12px 3px rgba(245,223,160,0.6); }
+    85%        { width:3px; box-shadow:0 0 18px 4px rgba(245,223,160,0.9); }
+    100%       { width:0;  box-shadow:0 0  0px 0 rgba(245,223,160,0);   }
+  }
+  @keyframes scanShow {
+    0%,100% { opacity:0; }
+    35%,65% { opacity:1; }
+  }
+
+  /* Bouton + label */
+  .btn {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    padding:9px 28px;
+    background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7);
+    border:1px solid rgba(255,255,255,0.2);
+    font-family:monospace; font-size:13px;
+    cursor:pointer; border-radius:3px;
+    letter-spacing:2px; text-transform:uppercase;
+    z-index:999; transition:background .2s;
+  }
+  .btn:hover { background:rgba(255,255,255,0.15); }
+  .label {
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    color:rgba(255,255,255,0.3); font-size:11px; letter-spacing:4px;
+    text-transform:uppercase; z-index:999;
+  }
+</style>
+</head>
+<body>
+
+<div class="fake-scene">SCENE</div>
+
+<div id="wrap">
+  <div class="half-l"></div>
+  <div class="half-r"></div>
+  <div class="edge-l"></div>
+  <div class="edge-r"></div>
+  <div class="center-line"></div>
+  <div class="scanlines"></div>
+</div>
+
+<div class="label">Transition — Wipe Rack Stripes</div>
+<button class="btn" onclick="play()">↺ Replay</button>
+
+<script>
+const wrap = document.getElementById('wrap');
+
+function play() {
+  wrap.classList.remove('playing');
+  void wrap.offsetWidth;
+  wrap.classList.add('playing');
+}
+
+setTimeout(play, 400);
+setInterval(play, 2800);
+</script>
+</body>
+</html>

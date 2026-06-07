@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --serigraph:   #e8e4dc;
+    --ivory:       #f5dfa0;
+    --muted:       #a09880;
+
+    /* 21:9 dans 1920×1080 :
+       jeu    → y = 128px à y = 951px (823px, ratio 1920:823 ≈ 21:9)
+       top    → y = 0   à y = 128px
+       bottom → y = 951px à y = 1080px */
+    --top-h:   135px;
+    --bot-top: 945px;
+    --bot-h:   135px;
+  }
+
+  body {
+    width:1920px; height:1080px;
+    background:transparent;
+    overflow:hidden;
+    font-family:'Rajdhani', sans-serif;
+  }
+
+  /* ─── Fond animé commun aux deux bandes ─── */
+  .band-bg {
+    position:absolute;
+    left:0; right:0;
+    overflow:hidden;
+  }
+  .band-bg-top    { top:0;           height:var(--top-h); }
+  .band-bg-bottom { top:var(--bot-top); bottom:0; }
+
+  /* Couche 1 : couleur de base + gradient de couleurs thème qui dérive */
+  .band-bg::before {
+    content:''; position:absolute; inset:0;
+    background:
+      linear-gradient(120deg,
+        rgba(177, 58, 38,0.07)   0%,
+        rgba( 60, 75,176,0.07)  25%,
+        rgba(248,125, 55,0.07)  50%,
+        rgba(233,188, 63,0.07)  75%,
+        rgba(177, 58, 38,0.07) 100%
+      ),
+      #1e1c18;
+    background-size:400% 100%;
+    animation:bandFlow 28s ease-in-out infinite;
+  }
+  @keyframes bandFlow {
+    0%   { background-position:0%   50%; }
+    50%  { background-position:100% 50%; }
+    100% { background-position:0%   50%; }
+  }
+
+  /* Couche 2 : lignes brushed-metal verticales très fines */
+  .band-bg::after {
+    content:''; position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent              0px,
+        rgba(255,255,255,0.018)  1px,
+        transparent              2px,
+        transparent              6px
+      ),
+      linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+    pointer-events:none;
+  }
+
+  /* Couche 3 : scanlines qui dérivent */
+  .scan-layer {
+    position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.10) 0px,
+      rgba(0,0,0,0.10) 1px,
+      transparent      1px,
+      transparent      4px
+    );
+    animation:scanDrift 10s linear infinite;
+  }
+  @keyframes scanDrift {
+    from { background-position:0 0; }
+    to   { background-position:0 80px; }
+  }
+
+  /* ─── Liserés 4 couleurs ─── */
+  .stripe {
+    position:absolute; left:0; right:0;
+    height:3px; display:flex;
+  }
+  .stripe-top    { top:var(--top-h); }
+  .stripe-bottom { top:var(--bot-top); }
+  .bs   { flex:1; opacity:.9; }
+  .bs-r { background:var(--juno-red); }
+  .bs-b { background:var(--juno-blue); }
+  .bs-o { background:var(--juno-orange); }
+  .bs-y { background:var(--juno-yellow); }
+
+  /* ─── Rack stripes latéraux sur les deux bandes ─── */
+  .rack-l-top, .rack-r-top {
+    position:absolute; top:0; width:3px; height:var(--top-h); opacity:.75;
+  }
+  .rack-l-top { left:0;  background:linear-gradient(180deg,var(--juno-red),var(--juno-blue)); }
+  .rack-r-top { right:0; background:linear-gradient(180deg,var(--juno-orange),var(--juno-yellow)); }
+
+  .rack-l-bot, .rack-r-bot {
+    position:absolute; top:var(--bot-top); bottom:0; width:3px; opacity:.75;
+  }
+  .rack-l-bot { left:0;  background:linear-gradient(180deg,var(--juno-red),var(--juno-blue)); }
+  .rack-r-bot { right:0; background:linear-gradient(180deg,var(--juno-orange),var(--juno-yellow)); }
+
+  /* ─── Contenu barre basse — tout à droite ─── */
+  .bar-content {
+    position:absolute;
+    top:var(--bot-top); bottom:0;
+    left:3px; right:3px;
+    display:flex; align-items:center; justify-content:flex-end;
+    padding:0 24px; gap:0;
+  }
+
+  /* Pseudo */
+  .brand { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .brand-name {
+    font-family:'Rajdhani',sans-serif;
+    font-size:20px; font-weight:700;
+    letter-spacing:5px; text-transform:uppercase;
+    color:rgba(240,237,232,0.8);
+    text-shadow:0 1px 4px rgba(0,0,0,0.85);
+  }
+  .brand-name .p-blue { color:rgba(100,120,220,1); }
+  .brand-leds { display:flex; gap:5px; align-items:center; }
+  .b-led {
+    width:4px; height:4px; border-radius:50%;
+    animation:bLed var(--d,3s) ease-in-out infinite var(--dl,0s);
+  }
+  @keyframes bLed { 0%,80%,100%{opacity:.2;} 40%{opacity:.9;} }
+
+  .vsep {
+    width:1px; height:26px;
+    background:rgba(255,255,255,0.2);
+    margin:0 24px; flex-shrink:0;
+  }
+
+  /* Heure + date */
+  .time-block { flex-shrink:0; display:flex; align-items:baseline; gap:8px; }
+  .time-val {
+    font-family:'Share Tech Mono',monospace;
+    font-size:22px; color:var(--ivory);
+    letter-spacing:2px; line-height:1;
+    text-shadow:0 1px 4px rgba(0,0,0,0.9);
+  }
+  .date-val {
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px; color:var(--muted);
+    letter-spacing:1px;
+    text-shadow:0 1px 3px rgba(0,0,0,0.9);
+  }
+
+  /* Follow */
+  .follow-block { flex-shrink:0; display:flex; align-items:center; gap:7px; }
+  .follow-dot {
+    width:5px; height:5px; border-radius:50%;
+    background:var(--juno-red); flex-shrink:0;
+    animation:fpulse 3s ease-in-out infinite;
+  }
+  @keyframes fpulse { 0%,100%{opacity:.35;} 50%{opacity:1;} }
+  .follow-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:8px; letter-spacing:3px;
+    color:var(--muted); text-transform:uppercase; flex-shrink:0;
+    text-shadow:0 1px 3px rgba(0,0,0,0.9);
+  }
+  .follow-name {
+    font-family:'Rajdhani',sans-serif;
+    font-size:15px; font-weight:600;
+    color:var(--serigraph); letter-spacing:1px;
+    max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    text-shadow:0 1px 3px rgba(0,0,0,0.9);
+  }
+</style>
+</head>
+<body>
+
+<!-- Bande haute -->
+<div class="band-bg band-bg-top"><div class="scan-layer"></div></div>
+<div class="rack-l-top"></div>
+<div class="rack-r-top"></div>
+
+<!-- Bande basse -->
+<div class="band-bg band-bg-bottom"><div class="scan-layer"></div></div>
+<div class="rack-l-bot"></div>
+<div class="rack-r-bot"></div>
+
+<!-- Liserés -->
+<div class="stripe stripe-top">
+  <div class="bs bs-r"></div><div class="bs bs-b"></div>
+  <div class="bs bs-o"></div><div class="bs bs-y"></div>
+</div>
+<div class="stripe stripe-bottom">
+  <div class="bs bs-r"></div><div class="bs bs-b"></div>
+  <div class="bs bs-o"></div><div class="bs bs-y"></div>
+</div>
+
+<!-- Infos — barre basse, calées à droite -->
+<div class="bar-content">
+  <div class="brand">
+    <div class="brand-name">T<span class="p-blue">o</span>ofi</div>
+    <div class="brand-leds">
+      <div class="b-led" style="background:var(--juno-red);   --d:4s;  --dl:0s"></div>
+      <div class="b-led" style="background:var(--juno-blue);  --d:5s;  --dl:.7s"></div>
+      <div class="b-led" style="background:var(--juno-orange);--d:3.5s;--dl:1.4s"></div>
+      <div class="b-led" style="background:var(--juno-yellow);--d:4.5s;--dl:2.1s"></div>
+    </div>
+  </div>
+
+  <div class="vsep"></div>
+
+  <div class="time-block">
+    <div class="time-val" id="clock">--:--</div>
+    <div class="date-val" id="datestr">--/--/----</div>
+  </div>
+
+  <div class="vsep"></div>
+
+  <div class="follow-block">
+    <div class="follow-dot"></div>
+    <div class="follow-label">Follow</div>
+    <div class="follow-name" id="followName">En attente…</div>
+  </div>
+</div>
+
+<script>
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  const dd = String(n.getDate()).padStart(2,'0');
+  const mm = String(n.getMonth()+1).padStart(2,'0');
+  document.getElementById('datestr').textContent = `${dd}/${mm}/${n.getFullYear()}`;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+function updateFollow(name){ document.getElementById('followName').textContent = name||'En attente…'; }
+
+const TWITCH_CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
+const TWITCH_CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
+const TWITCH_REFRESH_TOKEN = '71zu3xcd78l78ao9ts43jd77wrmkp7m1tgr3yxok1h0vprph1v';
+const TWITCH_BROADCASTER   = '44582688';
+
+let twAccessToken = null, twTokenExpiry = 0, lastFollower = null;
+
+async function twGetToken() {
+  if (twAccessToken && Date.now() < twTokenExpiry) return twAccessToken;
+  const res = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id:     TWITCH_CLIENT_ID,
+      client_secret: TWITCH_CLIENT_SECRET,
+      refresh_token: TWITCH_REFRESH_TOKEN,
+      grant_type:    'refresh_token',
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    twAccessToken = data.access_token;
+    twTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  }
+  return twAccessToken;
+}
+
+async function fetchLatestFollower() {
+  try {
+    const token = await twGetToken();
+    if (!token) return;
+    const res = await fetch(
+      `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${TWITCH_BROADCASTER}&first=1`,
+      { headers: { 'Client-Id': TWITCH_CLIENT_ID, 'Authorization': 'Bearer ' + token } }
+    );
+    const data = await res.json();
+    const name = data.data?.[0]?.user_name;
+    if (name && name !== lastFollower) { lastFollower = name; updateFollow(name); }
+  } catch(e) {}
+}
+fetchLatestFollower();
+setInterval(fetchLatestFollower, 30000);
+</script>
+</body>
+</html>

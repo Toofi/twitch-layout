@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+  }
+  body {
+    width:100vw; height:100vh;
+    background:#111;
+    overflow:hidden;
+    font-family:monospace;
+  }
+
+  /* Faux contenu derrière pour montrer l'effet */
+  .fake-scene {
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,0.08);
+    font-size:60px; letter-spacing:10px;
+    user-select:none;
+  }
+
+  /* Les 4 bandes horizontales */
+  .band {
+    position:fixed;
+    left:0; width:100%;
+    height:25%;
+    will-change:transform;
+  }
+  .band-1 { top:0%;  background:var(--juno-red); }
+  .band-2 { top:25%; background:var(--juno-blue); }
+  .band-3 { top:50%; background:var(--juno-orange); }
+  .band-4 { top:75%; background:var(--juno-yellow); }
+
+  /* Légère ombre sur le bord droit de chaque bande pour la profondeur */
+  .band::after {
+    content:'';
+    position:absolute; top:0; right:0; bottom:0;
+    width:40px;
+    background:linear-gradient(90deg, transparent, rgba(0,0,0,0.25));
+  }
+
+  /* Scanlines par-dessus */
+  .scanlines {
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px,
+      transparent 1px, transparent 4px
+    );
+    pointer-events:none;
+    opacity:0;
+  }
+
+  /* ─── États d'animation (classe .playing) ─── */
+  .playing .band-1 { animation: bIn 0.42s 0ms    cubic-bezier(.55,0,.1,1) forwards,
+                                bOut 0.42s 820ms  cubic-bezier(.9,0,.45,1) forwards; }
+  .playing .band-2 { animation: bIn 0.42s 70ms   cubic-bezier(.55,0,.1,1) forwards,
+                                bOut 0.42s 890ms  cubic-bezier(.9,0,.45,1) forwards; }
+  .playing .band-3 { animation: bIn 0.42s 140ms  cubic-bezier(.55,0,.1,1) forwards,
+                                bOut 0.42s 960ms  cubic-bezier(.9,0,.45,1) forwards; }
+  .playing .band-4 { animation: bIn 0.42s 210ms  cubic-bezier(.55,0,.1,1) forwards,
+                                bOut 0.42s 1030ms cubic-bezier(.9,0,.45,1) forwards; }
+
+  .playing .scanlines { animation: scanShow 1.5s ease forwards; }
+
+  @keyframes bIn  {
+    from { transform:translateX(-100%); }
+    to   { transform:translateX(0); }
+  }
+  @keyframes bOut {
+    from { transform:translateX(0); }
+    to   { transform:translateX(100%); }
+  }
+  @keyframes scanShow {
+    0%,100% { opacity:0; }
+    40%,60% { opacity:1; }
+  }
+
+  /* Init : bandes hors-écran */
+  .band { transform:translateX(-100%); }
+
+  /* Bouton replay */
+  .btn {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    padding:9px 28px;
+    background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7);
+    border:1px solid rgba(255,255,255,0.2);
+    font-family:monospace; font-size:13px;
+    cursor:pointer; border-radius:3px;
+    letter-spacing:2px; text-transform:uppercase;
+    z-index:999;
+    transition:background .2s;
+  }
+  .btn:hover { background:rgba(255,255,255,0.15); }
+
+  /* Label */
+  .label {
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    color:rgba(255,255,255,0.3); font-size:11px; letter-spacing:4px;
+    text-transform:uppercase; z-index:999;
+  }
+</style>
+</head>
+<body>
+
+<div class="fake-scene">SCENE</div>
+
+<div id="wrap">
+  <div class="band band-1"></div>
+  <div class="band band-2"></div>
+  <div class="band band-3"></div>
+  <div class="band band-4"></div>
+  <div class="scanlines"></div>
+</div>
+
+<div class="label">Transition — Sweep 4 couleurs</div>
+<button class="btn" onclick="play()">↺ Replay</button>
+
+<script>
+const wrap = document.getElementById('wrap');
+
+function play() {
+  wrap.classList.remove('playing');
+  void wrap.offsetWidth; // force reflow
+  wrap.classList.add('playing');
+}
+
+// Auto-play au chargement
+setTimeout(play, 400);
+// Re-loop automatique
+setInterval(play, 2800);
+</script>
+</body>
+</html>
