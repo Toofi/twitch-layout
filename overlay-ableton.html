@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920, height=1080">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -12,6 +12,7 @@
     --juno-blue:   #3c4bb0;
     --juno-orange: #f87d37;
     --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
     --serigraph:   #e8e4dc;
     --ivory:       #f5dfa0;
     --muted:       #a09880;
@@ -69,13 +70,13 @@
     position:absolute;
     top:var(--bar-top); left:0; bottom:0;
     width:3px;
-    background:linear-gradient(180deg,var(--juno-red),var(--juno-blue)); opacity:.75;
+    background:linear-gradient(180deg,var(--juno-red),var(--juno-blue),var(--juno-orange),var(--juno-yellow)); opacity:.75;
   }
   .rack-r {
     position:absolute;
     top:var(--bar-top); right:0; bottom:0;
     width:3px;
-    background:linear-gradient(180deg,var(--juno-orange),var(--juno-yellow)); opacity:.75;
+    background:linear-gradient(180deg,var(--juno-yellow),var(--juno-orange),var(--juno-blue),var(--juno-red)); opacity:.75;
   }
 
   /* Cadre webcam — 320×180 (16:9) */
@@ -97,20 +98,20 @@
   .cam-frame::after {
     content:''; position:absolute; bottom:-1px; right:-1px;
     width:14px; height:14px;
-    border-bottom:2px solid var(--juno-blue);
-    border-right:2px solid var(--juno-blue);
+    border-bottom:2px solid var(--juno-orange);
+    border-right:2px solid var(--juno-orange);
   }
   .cam-corner-tr {
     position:absolute; top:-1px; right:-1px;
     width:14px; height:14px;
-    border-top:2px solid var(--juno-orange);
-    border-right:2px solid var(--juno-orange);
+    border-top:2px solid var(--juno-yellow);
+    border-right:2px solid var(--juno-yellow);
   }
   .cam-corner-bl {
     position:absolute; bottom:-1px; left:-1px;
     width:14px; height:14px;
-    border-bottom:2px solid var(--juno-yellow);
-    border-left:2px solid var(--juno-yellow);
+    border-bottom:2px solid var(--juno-blue);
+    border-left:2px solid var(--juno-blue);
   }
   .cam-label {
     position:absolute;
@@ -152,7 +153,7 @@
     color:rgba(240,237,232,0.85);
     text-shadow:0 1px 4px rgba(0,0,0,0.85);
   }
-  .brand-name .p-blue { color:rgba(100,120,220,1); }
+  .brand-name .p-blue { color:var(--juno-blue-bright); }
   .brand-leds { display:flex; gap:5px; align-items:center; }
   .b-led {
     width:5px; height:5px; border-radius:50%;

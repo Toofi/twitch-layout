@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920, height=1080">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -12,6 +12,7 @@
     --juno-blue:   #3c4bb0;
     --juno-orange: #f87d37;
     --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
     --serigraph:   #e8e4dc;
     --ivory:       #f5dfa0;
     --muted:       #a09880;
@@ -111,14 +112,14 @@
   .rack-l-top, .rack-r-top {
     position:absolute; top:0; width:3px; height:var(--top-h); opacity:.75;
   }
-  .rack-l-top { left:0;  background:linear-gradient(180deg,var(--juno-red),var(--juno-blue)); }
-  .rack-r-top { right:0; background:linear-gradient(180deg,var(--juno-orange),var(--juno-yellow)); }
+  .rack-l-top { left:0;  background:linear-gradient(180deg,var(--juno-red),var(--juno-blue),var(--juno-orange),var(--juno-yellow)); }
+  .rack-r-top { right:0; background:linear-gradient(180deg,var(--juno-yellow),var(--juno-orange),var(--juno-blue),var(--juno-red)); }
 
   .rack-l-bot, .rack-r-bot {
     position:absolute; top:var(--bot-top); bottom:0; width:3px; opacity:.75;
   }
-  .rack-l-bot { left:0;  background:linear-gradient(180deg,var(--juno-red),var(--juno-blue)); }
-  .rack-r-bot { right:0; background:linear-gradient(180deg,var(--juno-orange),var(--juno-yellow)); }
+  .rack-l-bot { left:0;  background:linear-gradient(180deg,var(--juno-red),var(--juno-blue),var(--juno-orange),var(--juno-yellow)); }
+  .rack-r-bot { right:0; background:linear-gradient(180deg,var(--juno-yellow),var(--juno-orange),var(--juno-blue),var(--juno-red)); }
 
   /* ─── Contenu barre basse — tout à droite ─── */
   .bar-content {
@@ -138,7 +139,7 @@
     color:rgba(240,237,232,0.8);
     text-shadow:0 1px 4px rgba(0,0,0,0.85);
   }
-  .brand-name .p-blue { color:rgba(100,120,220,1); }
+  .brand-name .p-blue { color:var(--juno-blue-bright); }
   .brand-leds { display:flex; gap:5px; align-items:center; }
   .b-led {
     width:4px; height:4px; border-radius:50%;

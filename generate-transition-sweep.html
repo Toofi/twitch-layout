@@ -56,8 +56,8 @@ const EXIT_START = HOLD_START + HOLD_DUR;     // ≈ 995ms
 const EXIT_DUR   = 380;
 const TOTAL      = EXIT_START + 3 * STAGGER + EXIT_DUR + 80; // ≈ 1670ms
 
-function easeIn(t)  { return t * t * t; }
-function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+function easeIn(t)  { return t * t; }
+function easeOut(t) { return 1 - Math.pow(1 - t, 2); }
 
 // Calcule la position X du bord gauche de la bande i à l'instant t (ms)
 function bandX(i, t) {
@@ -82,14 +82,6 @@ function drawFrame(t) {
     ctx.fillStyle = COLORS[i];
     ctx.fillRect(x, y, W, BAND_H);
 
-    // Ombre sur le bord droit pour la profondeur
-    if (x < W) {
-      const grad = ctx.createLinearGradient(x + W - 50, 0, x + W, 0);
-      grad.addColorStop(0, 'rgba(0,0,0,0)');
-      grad.addColorStop(1, 'rgba(0,0,0,0.3)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(x, y, W, BAND_H);
-    }
   }
 
   // Scanlines

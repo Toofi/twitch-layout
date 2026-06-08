@@ -464,9 +464,10 @@
         <tr><td><code>--bar-h</code> (16:9)</td><td>52 px</td><td>Hauteur barre infos basse</td></tr>
         <tr><td><code>--chat-w</code></td><td>420 px</td><td>Largeur zone chat (layout complet)</td></tr>
         <tr><td><code>--stripe-w</code></td><td>3 px</td><td>Épaisseur liseré de pourtour</td></tr>
-        <tr><td><code>--bar-top</code> (21:9)</td><td>951 px</td><td>Haut de la bande basse pour contenu 21/9</td></tr>
-        <tr><td><code>--bar-h</code> (21:9)</td><td>129 px</td><td>Hauteur de la bande basse 21/9</td></tr>
-        <tr><td><code>--cam-w</code> (21:9)</td><td>370 px</td><td>Largeur du cadre webcam dans la bande</td></tr>
+        <tr><td><code>--top-h</code> (21:9)</td><td>135 px</td><td>Hauteur de la bande du haut (double-bande top+bot)</td></tr>
+        <tr><td><code>--bot-top</code> (21:9)</td><td>945 px</td><td>Y de début de la bande basse (1080 − 135)</td></tr>
+        <tr><td><code>--bot-h</code> (21:9)</td><td>135 px</td><td>Hauteur de la bande basse 21/9 (symétrique haut)</td></tr>
+        
         <tr><td>Coins</td><td>14 px / bord 2 px</td><td>Cornières de cadre</td></tr>
         <tr><td>Liseré / bandes</td><td>3 px (jusqu'à 7 px sur l'intro)</td><td>Filets de couleur</td></tr>
       </tbody>
@@ -484,9 +485,10 @@
         <tr><td><code>idle.html</code></td><td>Veille / BRB</td><td>Nom flottant, waveform d'ambiance très lente, particules. Aucun BPM. Boucle douce et permanente.</td></tr>
         <tr><td><code>outro.html</code></td><td>Écran de fin</td><td>Texte permanent « Merci d'avoir regardé / à très bientôt · toofi », VU-mètres 4 couleurs, waveform.</td></tr>
         <tr><td><code>overlay-16-9.html</code></td><td>Overlay barre basse 16:9</td><td>Fond transparent, barre basse seule (52 px) : marque + heure/date + follow. Pas de barre haute.</td></tr>
-        <tr><td><code>overlay-21-9.html</code></td><td>Overlay 21:9</td><td>Bande basse (y=951, h=129) + cadre webcam en coin, pour contenu ultra-large. Transparent.</td></tr>
+        <tr><td><code>overlay-21-9.html</code></td><td>Overlay 21:9</td><td>Double bande (top 135px + bot 135px), fond animé thème (#1e1c18 + dégradé 4 couleurs), infos à DROITE. Jeu 2560×1080 au centre. Pas de webcam.</td></tr>
         <tr><td><code>webcam-frame.html</code></td><td>Cadre webcam</td><td>Liseré 4 couleurs + cornières, fond transparent. À empiler à la taille exacte de la cam.</td></tr>
         <tr><td><code>layout-just-chat.html</code></td><td>Layout complet</td><td>Webcam à gauche, chat à droite (420 px), liseré de pourtour complet, barre infos, séparateur. Intégration Spotify possible.</td></tr>
+        <tr><td><code>background.html</code></td><td>Fond universel animé</td><td>Fond opaque thème (#1e1c18), dégradé 4 couleurs dérivant (36 s), respiration radiale (12 s), texture métal, scanlines, vignette, rack stripes latéraux. <strong>Waveform réactive au micro</strong> : 80 barres FFT centrées en bas (barW 10 px, gap 4 px, maxH 188 px), cycle des 4 couleurs JUNO, opacité ∝ amplitude, lueur au sommet, reflet miroir × 0.25. Halo radial bas-centre change de teinte selon le bin dominant. Pas de texte. À utiliser comme source navigateur de fond sur toute scène sans overlay dédié.</td></tr>
       </tbody>
     </table>
     <p class="note">Intégrations connues : suivi <em>now playing</em> Spotify via Web Audio API (capture audio bureau), et API JS d'alertes (<code>window.alertFollow()</code>, <code>alertSub()</code>, <code>alertBits()</code>, <code>alertRaid()</code>, <code>alertHype()</code>) pour StreamElements.</p>

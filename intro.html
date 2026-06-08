@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920, height=1080">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -19,12 +19,13 @@
     --juno-blue:   #3c4bb0;
     --juno-orange: #f87d37;
     --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
 
     /* Textes adaptés au fond gris métal */
     --white:      #f0ede8;   /* blanc légèrement chaud, plus visible sur gris */
     --serigraph:  #e8e4dc;   /* sérigraphie — blanc cassé lumineux */
     --ivory:      #f5dfa0;   /* ivory amplifié pour contraste sur gris */
-    --muted:      #8a8880;   /* muted — reste lisible sur panel */
+    --muted:      #a09880;   /* muted — reste lisible sur panel */
     --dark-text:  #1a1a1a;   /* texte foncé pour zones claires */
   }
 
@@ -155,7 +156,7 @@
     clip-path: inset(0 100% 0 0);
     animation: revealText 0.85s cubic-bezier(0.16,1,0.3,1) 0.7s forwards;
   }
-  .main-name .p-blue { color: var(--juno-blue); filter:brightness(1.4); }
+  .main-name .p-blue { color: var(--juno-blue-bright); }
   @keyframes revealText { to { clip-path: inset(0 0% 0 0); } }
 
   /* Règle 4 couleurs */

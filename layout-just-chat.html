@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920, height=1080">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -12,6 +12,7 @@
     --juno-blue:   #3c4bb0;
     --juno-orange: #f87d37;
     --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
     --panel-dark:  #3e3e3e;
     --panel:       #636466;
     --serigraph:   #e8e4dc;
@@ -191,7 +192,7 @@
     letter-spacing:5px; text-transform:uppercase;
     color:rgba(240,237,232,0.55);
   }
-  .brand-name .p-blue { color:rgba(100,120,220,0.9); }
+  .brand-name .p-blue { color:var(--juno-blue-bright); }
   .brand-leds { display:flex; gap:5px; }
   .b-led {
     width:4px; height:4px; border-radius:50%;
@@ -393,7 +394,7 @@ function updateFollow(name){ document.getElementById('followName').textContent =
 
 const TWITCH_CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
 const TWITCH_CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
-const TWITCH_REFRESH_TOKEN = 'bq6m4047vp3pn7n8rzy2k9dpfkthjhqs7xcy33a7cqhk3d5d5e';
+const TWITCH_REFRESH_TOKEN = '71zu3xcd78l78ao9ts43jd77wrmkp7m1tgr3yxok1h0vprph1v';
 const TWITCH_BROADCASTER   = '44582688';
 
 let twAccessToken = null, twTokenExpiry = 0, lastFollower = null;
