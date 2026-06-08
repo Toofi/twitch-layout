@@ -480,7 +480,7 @@ window.alertHype = function(level = 1) {
    ════════════════════════════════════════════════════ */
 const TW_CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
 const TW_CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
-const TW_REFRESH_TOKEN = '71zu3xcd78l78ao9ts43jd77wrmkp7m1tgr3yxok1h0vprph1v';
+const TW_REFRESH_TOKEN = 'pq5u64kwaie8j2lkee8c08dqjr41rvs3472fc3gzbspvz15mhg';
 const TW_BROADCASTER   = '44582688';
 
 let twToken = null, twTokenExpiry = 0;
@@ -569,6 +569,20 @@ async function twConnect() {
 }
 
 twConnect();
+
+/* ════════════════════════════════════════════════════
+   TEST — BroadcastChannel (test-alerts.html)
+   ════════════════════════════════════════════════════ */
+const testChannel = new BroadcastChannel('toofi-alerts');
+testChannel.onmessage = ({ data }) => {
+  if (!data?.type) return;
+  if (data.type === 'follow') alertFollow(data.name);
+  else if (data.type === 'sub')   alertSub(data.name, data.message);
+  else if (data.type === 'bits')  alertBits(data.name, data.amount, data.message);
+  else if (data.type === 'raid')  alertRaid(data.name, data.viewers);
+  else if (data.type === 'hype')  alertHype(data.level);
+};
+
 </script>
 
 <style>

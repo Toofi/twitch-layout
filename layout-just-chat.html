@@ -140,16 +140,6 @@
     background:transparent;
     position:relative;
   }
-  .chat-body-hint {
-    position:absolute; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    flex-direction:column; gap:8px;
-    font-family:'Share Tech Mono',monospace;
-    font-size:9px; letter-spacing:3px; text-transform:uppercase;
-    color:rgba(160,152,128,0.2);
-    text-align:center; padding:20px;
-    line-height:1.8;
-  }
 
   /* Bande décorative couleur en haut du chat */
   .chat-top-stripe {
@@ -329,9 +319,6 @@
     <div class="chat-header-label">Chat</div>
   </div>
   <div class="chat-body">
-    <div class="chat-body-hint">
-      Placer ici<br>la source chat OBS<br>(StreamElements /<br>Twitch overlay)
-    </div>
   </div>
 </div>
 
@@ -394,7 +381,7 @@ function updateFollow(name){ document.getElementById('followName').textContent =
 
 const TWITCH_CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
 const TWITCH_CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
-const TWITCH_REFRESH_TOKEN = '71zu3xcd78l78ao9ts43jd77wrmkp7m1tgr3yxok1h0vprph1v';
+const TWITCH_REFRESH_TOKEN = 'pq5u64kwaie8j2lkee8c08dqjr41rvs3472fc3gzbspvz15mhg';
 const TWITCH_BROADCASTER   = '44582688';
 
 let twAccessToken = null, twTokenExpiry = 0, lastFollower = null;

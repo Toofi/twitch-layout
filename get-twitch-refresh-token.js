@@ -12,7 +12,7 @@ const { exec } = require('child_process');
 const CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
 const CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
 const REDIRECT_URI  = 'http://localhost:18888/callback';
-const SCOPE         = 'moderator:read:followers channel:read:subscriptions bits:read channel:read:hype_train';
+const SCOPE         = 'moderator:read:followers channel:read:subscriptions bits:read channel:read:hype_train user:read:chat';
 
 const authUrl =
   `https://id.twitch.tv/oauth2/authorize` +

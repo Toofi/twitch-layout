@@ -132,6 +132,71 @@
     75% { background-position: -32px  64px; }
   }
 
+  /* ── INFOS BAS DROITE ── */
+  .info-panel {
+    position: absolute;
+    bottom: 28px; right: 20px;
+    display: flex; align-items: center; gap: 0;
+    z-index: 10;
+  }
+
+  .brand { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .brand-name {
+    font-family:'Rajdhani',sans-serif;
+    font-size:20px; font-weight:700;
+    letter-spacing:5px; text-transform:uppercase;
+    color:rgba(240,237,232,0.85);
+    text-shadow:0 1px 6px rgba(0,0,0,0.95);
+  }
+  .brand-name .p-blue { color:#6478dc; }
+  .brand-leds { display:flex; gap:5px; align-items:center; }
+  .b-led {
+    width:4px; height:4px; border-radius:50%;
+    animation:bLed var(--d,3s) ease-in-out infinite var(--dl,0s);
+  }
+  @keyframes bLed { 0%,80%,100%{opacity:.2;} 40%{opacity:.9;} }
+
+  .vsep {
+    width:1px; height:26px;
+    background:rgba(255,255,255,0.18);
+    margin:0 22px; flex-shrink:0;
+  }
+
+  .time-block { flex-shrink:0; display:flex; align-items:baseline; gap:8px; }
+  .time-val {
+    font-family:'Share Tech Mono',monospace;
+    font-size:22px; color:#f5dfa0;
+    letter-spacing:2px; line-height:1;
+    text-shadow:0 1px 5px rgba(0,0,0,0.95);
+  }
+  .date-val {
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px; color:#a09880;
+    letter-spacing:1px;
+    text-shadow:0 1px 4px rgba(0,0,0,0.95);
+  }
+
+  .follow-block { flex-shrink:0; display:flex; align-items:center; gap:7px; }
+  .follow-dot {
+    width:5px; height:5px; border-radius:50%;
+    background:#b13a26; flex-shrink:0;
+    animation:fpulse 3s ease-in-out infinite;
+  }
+  @keyframes fpulse { 0%,100%{opacity:.35;} 50%{opacity:1;} }
+  .follow-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:8px; letter-spacing:3px;
+    color:#a09880; text-transform:uppercase; flex-shrink:0;
+    text-shadow:0 1px 4px rgba(0,0,0,0.95);
+  }
+  .follow-name {
+    font-family:'Rajdhani',sans-serif;
+    font-size:15px; font-weight:600;
+    color:#e8e4dc; letter-spacing:1px;
+    max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    text-shadow:0 1px 4px rgba(0,0,0,0.95);
+  }
+
   /* ── WAVEFORM CANVAS ── */
   #waveCanvas {
     position: absolute;
@@ -167,6 +232,30 @@
   <div class="rack-r"></div>
   <div id="volHalo"></div>
   <canvas id="waveCanvas" width="1920" height="200"></canvas>
+
+  <!-- ── INFOS BAS DROITE ── -->
+  <div class="info-panel">
+    <div class="brand">
+      <div class="brand-name">T<span class="p-blue">o</span>ofi</div>
+      <div class="brand-leds">
+        <div class="b-led" style="background:#b13a26;--d:4s;  --dl:0s"></div>
+        <div class="b-led" style="background:#3c4bb0;--d:5s;  --dl:.7s"></div>
+        <div class="b-led" style="background:#f87d37;--d:3.5s;--dl:1.4s"></div>
+        <div class="b-led" style="background:#e9bc3f;--d:4.5s;--dl:2.1s"></div>
+      </div>
+    </div>
+    <div class="vsep"></div>
+    <div class="time-block">
+      <div class="time-val" id="clock">--:--</div>
+      <div class="date-val" id="datestr">--/--/----</div>
+    </div>
+    <div class="vsep"></div>
+    <div class="follow-block">
+      <div class="follow-dot"></div>
+      <div class="follow-label">Follow</div>
+      <div class="follow-name" id="followName">En attente…</div>
+    </div>
+  </div>
 
 <script>
 /* ════════════════════════════════════════════════
@@ -311,6 +400,69 @@ function renderBars() {
 
 /* ── Lancement dès que la page est prête ── */
 document.addEventListener('DOMContentLoaded', () => initAudio());
+
+/* ════════════════════════════════════════════════
+   HORLOGE
+   ════════════════════════════════════════════════ */
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  const dd = String(n.getDate()).padStart(2,'0');
+  const mm = String(n.getMonth()+1).padStart(2,'0');
+  document.getElementById('datestr').textContent = `${dd}/${mm}/${n.getFullYear()}`;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+/* ════════════════════════════════════════════════
+   TWITCH — dernier follow
+   ════════════════════════════════════════════════ */
+const TW_CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
+const TW_CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
+const TW_REFRESH_TOKEN = 'pq5u64kwaie8j2lkee8c08dqjr41rvs3472fc3gzbspvz15mhg';
+const TW_BROADCASTER   = '44582688';
+
+let twToken = null, twTokenExpiry = 0, lastFollower = null;
+
+async function twGetToken() {
+  if (twToken && Date.now() < twTokenExpiry) return twToken;
+  const res = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id:     TW_CLIENT_ID,
+      client_secret: TW_CLIENT_SECRET,
+      refresh_token: TW_REFRESH_TOKEN,
+      grant_type:    'refresh_token',
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    twToken = data.access_token;
+    twTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  }
+  return twToken;
+}
+
+async function fetchLatestFollower() {
+  try {
+    const token = await twGetToken();
+    if (!token) return;
+    const res = await fetch(
+      `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${TW_BROADCASTER}&first=1`,
+      { headers: { 'Client-Id': TW_CLIENT_ID, 'Authorization': 'Bearer ' + token } }
+    );
+    const data = await res.json();
+    const name = data.data?.[0]?.user_name;
+    if (name && name !== lastFollower) {
+      lastFollower = name;
+      document.getElementById('followName').textContent = name;
+    }
+  } catch(e) {}
+}
+fetchLatestFollower();
+setInterval(fetchLatestFollower, 30000);
 </script>
 </body>
 </html>

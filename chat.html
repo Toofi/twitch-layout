@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
+    --white:       #f0ede8;
+    --ivory:       #f5dfa0;
+    --muted:       #a09880;
+  }
+
+  html, body {
+    width: 422px; height: 975px;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  /* ── CONTENEUR — ancré en bas, pousse vers le haut ── */
+  #chat {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    max-height: 980px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  /* ── MESSAGE ── */
+  .msg {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.35;
+    word-break: break-word;
+    animation: msgIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── BARRE PULSANTE ── */
+  .msg-bar {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    border-radius: 1px;
+    vertical-align: middle;
+    margin-right: 8px;
+    position: relative;
+    top: -1px;
+    animation: barPulse var(--bar-d, 3s) ease-in-out infinite var(--bar-dl, 0s);
+  }
+  @keyframes barPulse {
+    0%,80%,100% { opacity: 0.2; }
+    40%         { opacity: 1; }
+  }
+
+  /* ── PSEUDO ── */
+  .msg-user {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+
+  /* ── SÉPARATEUR ── */
+  .msg-sep {
+    color: var(--muted);
+    font-weight: 400;
+    margin-right: 4px;
+    opacity: 0.6;
+  }
+
+  /* ── TEXTE ── */
+  .msg-text {
+    color: var(--white);
+    font-weight: 500;
+  }
+
+  /* ── EMOTES ── */
+  .msg-text img {
+    height: 28px;
+    vertical-align: middle;
+    margin: 0 2px;
+    position: relative;
+    top: -2px;
+  }
+
+  /* ── BADGES ── */
+  .msg-badges {
+    display: inline-flex;
+    gap: 3px;
+    vertical-align: middle;
+    margin-right: 5px;
+    position: relative;
+    top: -2px;
+  }
+  .msg-badges img {
+    width: 20px; height: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div id="chat"></div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   CONFIG
+   ════════════════════════════════════════════════════ */
+const TW_CLIENT_ID     = '2u00o86legvbgoo6lwpmorczuatjib';
+const TW_CLIENT_SECRET = '2ugkp32z3q1hb2jepdwk247ycxoz5l';
+const TW_REFRESH_TOKEN = 'pq5u64kwaie8j2lkee8c08dqjr41rvs3472fc3gzbspvz15mhg';
+const TW_BROADCASTER   = '44582688';
+
+/* ════════════════════════════════════════════════════
+   COULEURS JUNO — assignées par hash du pseudo
+   ════════════════════════════════════════════════════ */
+const JUNO = ['#b13a26', '#6478dc', '#f87d37', '#e9bc3f'];
+
+function barColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return JUNO[(h + 2) % JUNO.length];
+}
+
+function barDuration(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 17 + name.charCodeAt(i)) >>> 0;
+  return (2.5 + (h % 26) / 10).toFixed(1) + "s";
+}
+
+function barDelay(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 13 + name.charCodeAt(i)) >>> 0;
+  return ((h % 20) / 10).toFixed(1) + "s";
+}
+
+function userColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return JUNO[h % JUNO.length];
+}
+
+/* ════════════════════════════════════════════════════
+   RENDU D'UN MESSAGE
+   ════════════════════════════════════════════════════ */
+const chatEl = document.getElementById('chat');
+
+function addMessage(event) {
+  const name      = event.chatter_user_name || event.chatter_user_login || 'unknown';
+  const fragments = event.message?.fragments || [];
+  const badges    = event.badges || [];
+
+  // ── Badges
+  let badgesHtml = '';
+  if (badges.length) {
+    badgesHtml = `<span class="msg-badges">` +
+      badges.map(b => {
+        const url = getBadgeUrl(b.set_id, b.id);
+        return url ? `<img src="${url}" alt="${b.set_id}">` : '';
+      }).join('') +
+    `</span>`;
+  }
+
+  // ── Fragments (texte + emotes)
+  let textHtml = fragments.map(f => {
+    if (f.type === 'emote') {
+      const url = `https://static-cdn.jtvnw.net/emoticons/v2/${f.emote.id}/default/dark/1.0`;
+      return `<img src="${url}" alt="${f.text}" title="${f.text}">`;
+    }
+    // Échapper HTML
+    return f.text
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }).join('');
+
+  const el = document.createElement('div');
+  el.className = 'msg';
+  const bColor = barColor(name);
+  const bDur   = barDuration(name);
+  const bDel   = barDelay(name);
+
+  el.innerHTML =
+    `<span class="msg-bar" style="background:${bColor};--bar-d:${bDur};--bar-dl:${bDel}"></span>` +
+    badgesHtml +
+    `<span class="msg-user" style="color:${userColor(name)}">${name}</span>` +
+    `<span class="msg-sep">·</span>` +
+    `<span class="msg-text">${textHtml}</span>`;
+
+  chatEl.appendChild(el);
+
+  // Garde uniquement les 80 derniers messages (évite fuite mémoire sur longue session)
+  while (chatEl.children.length > 80) chatEl.removeChild(chatEl.firstChild);
+}
+
+/* ════════════════════════════════════════════════════
+   BADGES — cache des URLs
+   ════════════════════════════════════════════════════ */
+const badgeCache = {};
+
+async function loadBadges(token) {
+  try {
+    // Badges globaux
+    const gRes = await fetch('https://api.twitch.tv/helix/chat/badges/global', {
+      headers: { 'Client-Id': TW_CLIENT_ID, 'Authorization': 'Bearer ' + token }
+    });
+    const gData = await gRes.json();
+    (gData.data || []).forEach(set => {
+      set.versions.forEach(v => {
+        badgeCache[`${set.set_id}/${v.id}`] = v.image_url_1x;
+      });
+    });
+    // Badges de la chaîne
+    const cRes = await fetch(`https://api.twitch.tv/helix/chat/badges?broadcaster_id=${TW_BROADCASTER}`, {
+      headers: { 'Client-Id': TW_CLIENT_ID, 'Authorization': 'Bearer ' + token }
+    });
+    const cData = await cRes.json();
+    (cData.data || []).forEach(set => {
+      set.versions.forEach(v => {
+        badgeCache[`${set.set_id}/${v.id}`] = v.image_url_1x;
+      });
+    });
+  } catch(e) {}
+}
+
+function getBadgeUrl(setId, versionId) {
+  return badgeCache[`${setId}/${versionId}`] || null;
+}
+
+/* ════════════════════════════════════════════════════
+   TOKEN
+   ════════════════════════════════════════════════════ */
+let twToken = null, twTokenExpiry = 0;
+
+async function twGetToken() {
+  if (twToken && Date.now() < twTokenExpiry) return twToken;
+  const res = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id:     TW_CLIENT_ID,
+      client_secret: TW_CLIENT_SECRET,
+      refresh_token: TW_REFRESH_TOKEN,
+      grant_type:    'refresh_token',
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    twToken = data.access_token;
+    twTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  }
+  return twToken;
+}
+
+/* ════════════════════════════════════════════════════
+   EVENTSUB — channel.chat.message
+   SCOPE REQUIS : user:read:chat
+   ════════════════════════════════════════════════════ */
+async function twConnect() {
+  const token = await twGetToken();
+  if (!token) { setTimeout(twConnect, 10000); return; }
+
+  await loadBadges(token);
+
+  const ws = new WebSocket('wss://eventsub.wss.twitch.tv/ws');
+
+  ws.onmessage = async (e) => {
+    const msg  = JSON.parse(e.data);
+    const type = msg.metadata?.message_type;
+
+    if (type === 'session_welcome') {
+      const sid = msg.payload.session.id;
+      await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+        method: 'POST',
+        headers: {
+          'Client-Id':    TW_CLIENT_ID,
+          'Authorization':'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type:      'channel.chat.message',
+          version:   '1',
+          condition: {
+            broadcaster_user_id: TW_BROADCASTER,
+            user_id:             TW_BROADCASTER,   // le broadcaster lit son propre chat
+          },
+          transport: { method: 'websocket', session_id: sid },
+        })
+      });
+    }
+
+    if (type === 'notification' && msg.metadata.subscription_type === 'channel.chat.message') {
+      addMessage(msg.payload.event);
+    }
+  };
+
+  ws.onclose = () => setTimeout(twConnect, 5000);
+  ws.onerror = () => ws.close();
+}
+
+twConnect();
+</script>
+</body>
+</html>

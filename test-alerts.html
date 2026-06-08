@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Test Alertes — Toofi</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --bg:          #1e1c18;
+    --panel:       #2a2824;
+    --line:        rgba(255,255,255,0.08);
+    --white:       #f0ede8;
+    --muted:       #a09880;
+  }
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 40px;
+  }
+
+  h1 {
+    font-size: 18px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  h1 span { color: var(--white); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 680px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 18px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input[type="text"], input[type="number"] {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 6px 10px;
+    width: 100%;
+    outline: none;
+  }
+  input:focus { border-color: rgba(255,255,255,0.2); }
+
+  button {
+    width: 100%;
+    padding: 9px;
+    border: none;
+    border-radius: 2px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  button:hover  { filter: brightness(1.2); }
+  button:active { filter: brightness(0.85); }
+
+  .btn-follow { background: var(--juno-red);    color: #fff; }
+  .btn-sub    { background: var(--juno-blue);   color: #fff; }
+  .btn-bits   { background: var(--juno-orange); color: #fff; }
+  .btn-raid   { background: var(--juno-yellow); color: #1e1c18; }
+  .btn-hype   { background: linear-gradient(90deg, var(--juno-red), var(--juno-blue), var(--juno-orange), var(--juno-yellow)); color: #fff; grid-column: span 3; }
+
+  .status {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .status.ok  { color: #6478dc; }
+  .status.err { color: var(--juno-red); }
+
+  .note {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(160,152,128,0.45);
+    text-align: center;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<h1>Test alertes — <span>Toofi</span></h1>
+
+<div class="grid">
+
+  <!-- Follow -->
+  <div class="card">
+    <div class="card-title">Follow</div>
+    <input type="text" id="followName" value="TestViewer" placeholder="Pseudo">
+    <button class="btn-follow" onclick="send('follow')">♥ Follow</button>
+  </div>
+
+  <!-- Sub -->
+  <div class="card">
+    <div class="card-title">Subscriber</div>
+    <input type="text" id="subName" value="TestViewer" placeholder="Pseudo">
+    <input type="text" id="subMsg"  value="Super stream !" placeholder="Message (optionnel)">
+    <button class="btn-sub" onclick="send('sub')">★ Sub</button>
+  </div>
+
+  <!-- Bits -->
+  <div class="card">
+    <div class="card-title">Bits / Don</div>
+    <input type="text"   id="bitsName"   value="TestViewer" placeholder="Pseudo">
+    <input type="number" id="bitsAmount" value="500"        placeholder="Montant">
+    <input type="text"   id="bitsMsg"    value="GG le stream !" placeholder="Message (optionnel)">
+    <button class="btn-bits" onclick="send('bits')">◆ Bits</button>
+  </div>
+
+  <!-- Raid -->
+  <div class="card">
+    <div class="card-title">Raid</div>
+    <input type="text"   id="raidName"    value="TestStreamer" placeholder="Pseudo">
+    <input type="number" id="raidViewers" value="42"           placeholder="Viewers">
+    <button class="btn-raid" onclick="send('raid')">▶ Raid</button>
+  </div>
+
+  <!-- Hype -->
+  <div class="card" style="grid-column:span 2">
+    <div class="card-title">Hype Train</div>
+    <input type="number" id="hypeLevel" value="2" min="1" max="5" placeholder="Niveau">
+    <button class="btn-hype" onclick="send('hype')">▲ Hype Train</button>
+  </div>
+
+</div>
+
+<div class="status" id="status">En attente…</div>
+
+<div class="note">
+  alerts.html doit tourner dans OBS ou dans un onglet sur localhost:5500<br>
+  Ce panneau communique via BroadcastChannel — même origine requise
+</div>
+
+<script>
+const ch = new BroadcastChannel('toofi-alerts');
+
+const status = document.getElementById('status');
+
+function setStatus(msg, type = '') {
+  status.textContent = msg;
+  status.className = 'status ' + type;
+}
+
+function send(type) {
+  let payload;
+
+  if (type === 'follow') {
+    payload = { type: 'follow', name: val('followName') };
+  } else if (type === 'sub') {
+    payload = { type: 'sub', name: val('subName'), message: val('subMsg') };
+  } else if (type === 'bits') {
+    payload = { type: 'bits', name: val('bitsName'), amount: parseInt(val('bitsAmount')) || 100, message: val('bitsMsg') };
+  } else if (type === 'raid') {
+    payload = { type: 'raid', name: val('raidName'), viewers: parseInt(val('raidViewers')) || 0 };
+  } else if (type === 'hype') {
+    payload = { type: 'hype', level: parseInt(val('hypeLevel')) || 1 };
+  }
+
+  ch.postMessage(payload);
+  setStatus('✓ Envoyé — ' + type.toUpperCase(), 'ok');
+  setTimeout(() => setStatus('En attente…'), 2000);
+}
+
+function val(id) {
+  return document.getElementById(id)?.value?.trim() || '';
+}
+</script>
+</body>
+</html>
