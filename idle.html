@@ -98,19 +98,34 @@
     0%,100%{ transform:translate(-50%,-52%); }
     50%    { transform:translate(-50%,-48%); }
   }
-  .main-name {
-    font-family:'Rajdhani', sans-serif;
-    font-size:96px; font-weight:700;
-    letter-spacing:22px; text-transform:uppercase;
-    /* Sur gris métal : blanc semi-transparent reste lisible */
-    color:rgba(240,237,232,0.18);
-    line-height:1;
-    animation:namePulse 7s ease-in-out infinite;
+  @keyframes shimmer {
+    0%   { background-position: 0% 0%; }
+    50%  { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
   }
-  .main-name .p-blue {
-    color:rgba(60,75,176,0.5);
-    animation:namePulse 7s ease-in-out infinite 1s;
+  .logo-stack { position:relative; display:inline-block; line-height:0.88; }
+  .t-tnr {
+    font-family:'Times New Roman',Times,serif;
+    font-style:italic; font-weight:400; font-size:96px;
+    position:absolute; top:0; left:0;
+    white-space:nowrap; pointer-events:none;
+    background:linear-gradient(135deg,#b13a26 0%,#3c4bb0 28%,#f87d37 55%,#e9bc3f 78%,#b13a26 100%);
+    background-size:300% 300%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:shimmer 10s ease-in-out infinite;
   }
+  .t-av {
+    font-family:'Avenir Next Condensed','Avenir','Arial Narrow','Gill Sans MT Condensed',sans-serif;
+    font-weight:400; font-size:96px; letter-spacing:-0.01em;
+    position:relative; white-space:nowrap;
+    background:linear-gradient(135deg,#b13a26 0%,#3c4bb0 28%,#f87d37 55%,#e9bc3f 78%,#b13a26 100%);
+    background-size:300% 300%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:shimmer 10s ease-in-out infinite;
+  }
+  .main-name { animation:namePulse 7s ease-in-out infinite; }
   @keyframes namePulse {
     0%,100%{ opacity:0.7; }
     50%    { opacity:1; }
@@ -295,7 +310,7 @@
 </div>
 
 <div class="name-wrap">
-  <div class="main-name">T<span class="p-blue">o</span>ofi</div>
+  <div class="main-name"><div class="logo-stack"><div class="t-tnr">Toofi</div><div class="t-av">Toofi</div></div></div>
 </div>
 
 <div class="idle-msg">Je reviens dans pas longtemps&nbsp;!</div>

@@ -59,14 +59,33 @@
 
   /* Pseudo */
   .brand { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-  .brand-name {
-    font-family:'Rajdhani',sans-serif;
-    font-size:20px; font-weight:700;
-    letter-spacing:5px; text-transform:uppercase;
-    color:rgba(240,237,232,0.8);
-    text-shadow:0 1px 4px rgba(0,0,0,0.85);
+  @keyframes shimmer {
+    0%   { background-position: 0% 0%; }
+    50%  { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
   }
-  .brand-name .p-blue { color:var(--juno-blue-bright); }
+  .logo-stack { position:relative; display:inline-block; line-height:0.88; }
+  .t-tnr {
+    font-family:'Times New Roman',Times,serif;
+    font-style:italic; font-weight:400; font-size:20px;
+    position:absolute; top:0; left:0;
+    white-space:nowrap; pointer-events:none;
+    background:linear-gradient(135deg,#b13a26 0%,#3c4bb0 28%,#f87d37 55%,#e9bc3f 78%,#b13a26 100%);
+    background-size:300% 300%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:shimmer 10s ease-in-out infinite;
+  }
+  .t-av {
+    font-family:'Avenir Next Condensed','Avenir','Arial Narrow','Gill Sans MT Condensed',sans-serif;
+    font-weight:400; font-size:20px; letter-spacing:-0.01em;
+    position:relative; white-space:nowrap;
+    background:linear-gradient(135deg,#b13a26 0%,#3c4bb0 28%,#f87d37 55%,#e9bc3f 78%,#b13a26 100%);
+    background-size:300% 300%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:shimmer 10s ease-in-out infinite;
+  }
   .brand-leds { display:flex; gap:5px; align-items:center; }
   .b-led {
     width:4px; height:4px; border-radius:50%;
@@ -129,7 +148,7 @@
 
 <div class="bar-content">
   <div class="brand">
-    <div class="brand-name">T<span class="p-blue">o</span>ofi</div>
+    <div class="logo-stack"><div class="t-tnr">Toofi</div><div class="t-av">Toofi</div></div>
     <div class="brand-leds">
       <div class="b-led" style="background:var(--juno-red);   --d:4s;  --dl:0s"></div>
       <div class="b-led" style="background:var(--juno-blue);  --d:5s;  --dl:.7s"></div>
