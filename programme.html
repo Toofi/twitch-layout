@@ -262,7 +262,7 @@
     <label>Titre / sous-titre</label>
     <input type="text" id="cardTitle" value="Programme de stream" placeholder="Programme de stream">
     <div style="height:8px"></div>
-    <input type="text" id="cardSub" value="twitch.tv/toofi" placeholder="twitch.tv/toofi">
+    <input type="text" id="cardSub" value="twitch.tv/toofi__" placeholder="twitch.tv/toofi__">
   </div>
   <div class="editor-section">
     <label>Note de bas de page (optionnel)</label>
@@ -299,7 +299,7 @@ const JUNO_COLS  = ['#b13a26','#3c4bb0','#f87d37','#e9bc3f','#b13a26','#6478dc',
 const state = {
   weekDate: '',
   title:    'Programme de stream',
-  sub:      'twitch.tv/toofi',
+  sub:      'twitch.tv/toofi__',
   note:     '',
   format:   { w: 1080, h: 1350 },
   days: DAY_NAMES.map((name, i) => ({
@@ -471,21 +471,18 @@ function drawCard(W, H) {
   // ── En-tête
   let y = stripeH + 95;
 
-  // Nom
-  ctx.fillStyle = 'rgba(240,237,232,0.9)';
-  ctx.font = `700 ${Math.round(W*0.085)}px Rajdhani`;
-  ctx.letterSpacing = '6px';
-  const nameText = 'TOOFI';
-  const nameW = ctx.measureText(nameText).width;
-  // "T" + "O" bleu + "OFI"
-  ctx.fillStyle = 'rgba(240,237,232,0.9)';
-  ctx.fillText('T', W/2 - nameW/2, y);
-  const tW = ctx.measureText('T').width;
-  ctx.fillStyle = '#6478dc';
-  ctx.fillText('O', W/2 - nameW/2 + tW, y);
-  const toW = ctx.measureText('TO').width;
-  ctx.fillStyle = 'rgba(240,237,232,0.9)';
-  ctx.fillText('OFI', W/2 - nameW/2 + toW, y);
+  // Logo Toofi : Times New Roman italic (plein) + Avenir condense (contours)
+  const logoSize = Math.round(W * 0.085);
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '0px';
+  ctx.font = `italic 400 ${logoSize}px "Times New Roman", Times, serif`;
+  ctx.fillStyle = '#f5dfa0';
+  ctx.fillText('Toofi', W/2, y);
+  ctx.font = `400 ${logoSize}px "Avenir Next Condensed", Avenir, "Arial Narrow", sans-serif`;
+  ctx.strokeStyle = '#f5dfa0';
+  ctx.lineWidth = 1.5;
+  ctx.strokeText('Toofi', W/2, y);
+  ctx.lineWidth = 1;
 
   y += Math.round(W * 0.032);
 
@@ -682,14 +679,12 @@ function drawCardTo(c, W, H) {
   c.fillStyle=vig;c.fillRect(0,0,W,H);
 
   let y=stripeH+95;
-  c.font=`700 ${Math.round(W*.085)}px Rajdhani`;c.letterSpacing='6px';
-  const nm='TOOFI';c.fillStyle='rgba(240,237,232,0.9)';
-  const nmW=c.measureText(nm).width;
-  const tW2=c.measureText('T').width;
-  const toW2=c.measureText('TO').width;
-  c.fillText('T',W/2-nmW/2,y);
-  c.fillStyle='#6478dc';c.fillText('O',W/2-nmW/2+tW2,y);
-  c.fillStyle='rgba(240,237,232,0.9)';c.fillText('OFI',W/2-nmW/2+toW2,y);
+  const lS=Math.round(W*.085);
+  c.textAlign='center';c.letterSpacing='0px';
+  c.font=`italic 400 ${lS}px "Times New Roman",Times,serif`;
+  c.fillStyle='#f5dfa0';c.fillText('Toofi',W/2,y);
+  c.font=`400 ${lS}px "Avenir Next Condensed",Avenir,"Arial Narrow",sans-serif`;
+  c.strokeStyle='#f5dfa0';c.lineWidth=1.5;c.strokeText('Toofi',W/2,y);c.lineWidth=1;
   y+=Math.round(W*.032);
 
   c.fillStyle='rgba(255,255,255,0.08)';c.fillRect(PAD,y,W-PAD*2,1);y+=28;
