@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Programme hebdo — Toofi</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
+    --bg:          #1e1c18;
+    --panel:       #28261f;
+    --panel-light: #32302a;
+    --line:        rgba(255,255,255,0.07);
+    --white:       #f0ede8;
+    --ivory:       #f5dfa0;
+    --muted:       #a09880;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    gap: 0;
+  }
+
+  /* ══════════════════════════════════
+     PANNEAU ÉDITEUR — gauche
+  ══════════════════════════════════ */
+  #editor {
+    width: 420px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .editor-head {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .editor-head h1 {
+    font-size: 13px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .editor-head h1 span { color: var(--white); }
+
+  .editor-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .editor-section label {
+    display: block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  input[type="text"], input[type="date"], select, textarea {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 8px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: rgba(255,255,255,0.2);
+  }
+  input[type="color"] {
+    width: 32px; height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 2px;
+    background: none;
+    cursor: pointer;
+  }
+
+  /* ── Jours ── */
+  .day-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .day-card {
+    background: var(--panel-light);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--juno-blue);
+    border-radius: 0 3px 3px 0;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .day-card.disabled { opacity: 0.4; }
+  .day-card:nth-child(1) { border-left-color: var(--juno-red); }
+  .day-card:nth-child(2) { border-left-color: var(--juno-blue); }
+  .day-card:nth-child(3) { border-left-color: var(--juno-orange); }
+  .day-card:nth-child(4) { border-left-color: var(--juno-yellow); }
+  .day-card:nth-child(5) { border-left-color: var(--juno-red); }
+  .day-card:nth-child(6) { border-left-color: var(--juno-blue-bright); }
+  .day-card:nth-child(7) { border-left-color: var(--juno-orange); }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .day-toggle {
+    width: 14px; height: 14px;
+    accent-color: var(--juno-orange);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .day-name-label {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex: 1;
+  }
+
+  .day-fields {
+    padding: 0 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .day-row {
+    display: flex;
+    gap: 8px;
+  }
+  .day-row input { flex: 1; }
+  .day-fields input[type="text"] { font-family: 'Rajdhani', sans-serif; font-size: 13px; }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .field-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0.7;
+  }
+
+  /* ── Bouton export ── */
+  .editor-footer {
+    padding: 20px 24px;
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-export {
+    width: 100%;
+    padding: 13px;
+    background: var(--juno-red);
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: filter .15s;
+  }
+  .btn-export:hover { filter: brightness(1.15); }
+
+  .format-row {
+    display: flex;
+    gap: 8px;
+  }
+  .fmt-btn {
+    flex: 1;
+    padding: 7px;
+    background: var(--panel-light);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all .15s;
+    text-align: center;
+  }
+  .fmt-btn.active {
+    border-color: var(--juno-orange);
+    color: var(--juno-orange);
+    background: rgba(248,125,55,0.08);
+  }
+
+  /* ══════════════════════════════════
+     PRÉVISUALISATION — droite
+  ══════════════════════════════════ */
+  #preview-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    overflow: auto;
+    background: #141310;
+  }
+
+  #preview-canvas {
+    box-shadow: 0 8px 48px rgba(0,0,0,0.7);
+    border-radius: 2px;
+    max-height: calc(100vh - 80px);
+    width: auto;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ ÉDITEUR ═══════════════════════ -->
+<div id="editor">
+  <div class="editor-head">
+    <h1>Programme <span>Toofi</span></h1>
+  </div>
+
+  <!-- Infos générales -->
+  <div class="editor-section">
+    <label>Semaine du</label>
+    <input type="date" id="weekDate">
+  </div>
+  <div class="editor-section">
+    <label>Titre / sous-titre</label>
+    <input type="text" id="cardTitle" value="Programme de stream" placeholder="Programme de stream">
+    <div style="height:8px"></div>
+    <input type="text" id="cardSub" value="twitch.tv/toofi" placeholder="twitch.tv/toofi">
+  </div>
+  <div class="editor-section">
+    <label>Note de bas de page (optionnel)</label>
+    <input type="text" id="cardNote" placeholder="Les horaires peuvent changer · Rejoins le Discord !">
+  </div>
+
+  <!-- Jours -->
+  <div class="day-list" id="dayList"></div>
+
+  <!-- Footer -->
+  <div class="editor-footer">
+    <div class="format-row">
+      <div class="fmt-btn active" data-w="1080" data-h="1350" onclick="setFormat(this)">4:5 Feed</div>
+      <div class="fmt-btn"        data-w="1080" data-h="1920" onclick="setFormat(this)">9:16 Story</div>
+      <div class="fmt-btn"        data-w="1080" data-h="1080" onclick="setFormat(this)">1:1 Carré</div>
+    </div>
+    <button class="btn-export" onclick="exportPNG()">⬇ Exporter PNG</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PRÉVISUALISATION ═══════════════════════ -->
+<div id="preview-wrap">
+  <canvas id="preview-canvas"></canvas>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   DONNÉES
+════════════════════════════════════════════ */
+const DAY_NAMES  = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const JUNO_COLS  = ['#b13a26','#3c4bb0','#f87d37','#e9bc3f','#b13a26','#6478dc','#f87d37'];
+
+// État initial
+const state = {
+  weekDate: '',
+  title:    'Programme de stream',
+  sub:      'twitch.tv/toofi',
+  note:     '',
+  format:   { w: 1080, h: 1350 },
+  days: DAY_NAMES.map((name, i) => ({
+    enabled: i < 5,
+    name,
+    start: '20:00',
+    end:   '23:00',
+    game:  '',
+    note:  '',
+  }))
+};
+
+/* ════════════════════════════════════════════
+   INIT DATE
+════════════════════════════════════════════ */
+(function initDate() {
+  const today = new Date();
+  const day   = today.getDay();
+  const diff  = (day === 0 ? -6 : 1 - day);
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diff);
+  const iso = monday.toISOString().slice(0, 10);
+  document.getElementById('weekDate').value = iso;
+  state.weekDate = iso;
+})();
+
+/* ════════════════════════════════════════════
+   CONSTRUCTION DE L'ÉDITEUR
+════════════════════════════════════════════ */
+function buildEditor() {
+  const list = document.getElementById('dayList');
+  list.innerHTML = '';
+
+  state.days.forEach((day, i) => {
+    const card = document.createElement('div');
+    card.className = 'day-card' + (day.enabled ? '' : ' disabled');
+    card.style.borderLeftColor = JUNO_COLS[i];
+    card.innerHTML = `
+      <div class="day-header">
+        <input type="checkbox" class="day-toggle" ${day.enabled ? 'checked' : ''} onchange="toggleDay(${i}, this.checked)">
+        <div class="day-name-label" style="color:${JUNO_COLS[i]}">${day.name}</div>
+      </div>
+      <div class="day-fields" ${day.enabled ? '' : 'style="display:none"'} id="fields-${i}">
+        <div class="field-group">
+          <span class="field-label">Horaires</span>
+          <div class="day-row">
+            <input type="text" placeholder="Début  ex: 20:00" value="${day.start}"
+              oninput="updateDay(${i},'start',this.value)">
+            <input type="text" placeholder="Fin  ex: 23:00" value="${day.end}"
+              oninput="updateDay(${i},'end',this.value)">
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Activité / contenu</span>
+          <input type="text" placeholder="ex: Elden Ring, Just Chatting…" value="${day.game}"
+            oninput="updateDay(${i},'game',this.value)">
+        </div>
+        <div class="field-group">
+          <span class="field-label">Note</span>
+          <input type="text" placeholder="optionnel" value="${day.note}"
+            oninput="updateDay(${i},'note',this.value)">
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function toggleDay(i, val) {
+  state.days[i].enabled = val;
+  buildEditor();
+  render();
+}
+
+function updateDay(i, key, val) {
+  state.days[i][key] = val;
+  render();
+}
+
+// Inputs globaux
+document.getElementById('weekDate').addEventListener('input', e => { state.weekDate = e.target.value; render(); });
+document.getElementById('cardTitle').addEventListener('input', e => { state.title = e.target.value; render(); });
+document.getElementById('cardSub').addEventListener('input', e => { state.sub = e.target.value; render(); });
+document.getElementById('cardNote').addEventListener('input', e => { state.note = e.target.value; render(); });
+
+function setFormat(el) {
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  state.format = { w: +el.dataset.w, h: +el.dataset.h };
+  render();
+}
+
+/* ════════════════════════════════════════════
+   RENDU CANVAS
+════════════════════════════════════════════ */
+const canvas = document.getElementById('preview-canvas');
+const ctx    = canvas.getContext('2d');
+
+function formatWeekDate(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  const start = new Date(+y, +m - 1, +d);
+  const end   = new Date(start); end.setDate(start.getDate() + 6);
+  const fmt = (dt) => String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0');
+  return `${fmt(start)} — ${fmt(end)} ${y}`;
+}
+
+function render() {
+  const W = state.format.w;
+  const H = state.format.h;
+  canvas.width  = W;
+  canvas.height = H;
+
+  // Adapter la taille d'affichage
+  const maxH = window.innerHeight - 80;
+  const scale = Math.min(maxH / H, (window.innerWidth - 460) / W);
+  canvas.style.width  = Math.round(W * scale) + 'px';
+  canvas.style.height = Math.round(H * scale) + 'px';
+
+  document.fonts.ready.then(() => drawCard(W, H));
+}
+
+function drawCard(W, H) {
+  const PAD = 64;
+  const JUNO = ['#b13a26','#3c4bb0','#f87d37','#e9bc3f','#b13a26','#6478dc','#f87d37'];
+
+  // ── Fond
+  ctx.fillStyle = '#1e1c18';
+  ctx.fillRect(0, 0, W, H);
+
+  // Texture métal légère
+  ctx.fillStyle = 'rgba(255,255,255,0.008)';
+  for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
+
+  // ── Liseré haut 4 couleurs
+  const stripeH = 6;
+  const stripeCols = ['#b13a26','#3c4bb0','#f87d37','#e9bc3f'];
+  stripeCols.forEach((c, i) => {
+    ctx.fillStyle = c;
+    ctx.fillRect(i * W/4, 0, W/4, stripeH);
+  });
+
+  // ── Rack stripes latéraux
+  const rackW = 3;
+  const rackL = ctx.createLinearGradient(0, 0, 0, H);
+  rackL.addColorStop(0,    '#b13a26');
+  rackL.addColorStop(0.33, '#3c4bb0');
+  rackL.addColorStop(0.66, '#f87d37');
+  rackL.addColorStop(1,    '#e9bc3f');
+  ctx.fillStyle = rackL; ctx.globalAlpha = 0.6;
+  ctx.fillRect(0, 0, rackW, H);
+
+  const rackR = ctx.createLinearGradient(0, 0, 0, H);
+  rackR.addColorStop(0,    '#e9bc3f');
+  rackR.addColorStop(0.33, '#f87d37');
+  rackR.addColorStop(0.66, '#3c4bb0');
+  rackR.addColorStop(1,    '#b13a26');
+  ctx.fillStyle = rackR;
+  ctx.fillRect(W - rackW, 0, rackW, H);
+  ctx.globalAlpha = 1;
+
+  // ── Vignette
+  const vig = ctx.createRadialGradient(W/2, H/2, H*0.25, W/2, H/2, H*0.75);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.4)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── En-tête
+  let y = stripeH + 95;
+
+  // Nom
+  ctx.fillStyle = 'rgba(240,237,232,0.9)';
+  ctx.font = `700 ${Math.round(W*0.085)}px Rajdhani`;
+  ctx.letterSpacing = '6px';
+  const nameText = 'TOOFI';
+  const nameW = ctx.measureText(nameText).width;
+  // "T" + "O" bleu + "OFI"
+  ctx.fillStyle = 'rgba(240,237,232,0.9)';
+  ctx.fillText('T', W/2 - nameW/2, y);
+  const tW = ctx.measureText('T').width;
+  ctx.fillStyle = '#6478dc';
+  ctx.fillText('O', W/2 - nameW/2 + tW, y);
+  const toW = ctx.measureText('TO').width;
+  ctx.fillStyle = 'rgba(240,237,232,0.9)';
+  ctx.fillText('OFI', W/2 - nameW/2 + toW, y);
+
+  y += Math.round(W * 0.032);
+
+  // Séparateur
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(PAD, y, W - PAD*2, 1);
+  y += 28;
+
+  // Titre
+  ctx.fillStyle = '#f5dfa0';
+  ctx.font = `600 ${Math.round(W*0.038)}px Rajdhani`;
+  ctx.letterSpacing = '4px';
+  ctx.textAlign = 'center';
+  ctx.fillText((state.title || 'Programme de stream').toUpperCase(), W/2, y);
+  y += Math.round(W * 0.03);
+
+  // Date semaine
+  if (state.weekDate) {
+    ctx.fillStyle = '#a09880';
+    ctx.font = `400 ${Math.round(W*0.022)}px "Share Tech Mono"`;
+    ctx.letterSpacing = '2px';
+    ctx.fillText(formatWeekDate(state.weekDate), W/2, y);
+  }
+  y += 44;
+
+  // ── Jours actifs
+  const activeDays = state.days.filter(d => d.enabled);
+  const n = Math.max(activeDays.length, 1);
+  const dayGap = 12;
+  const dayH = Math.min(Math.round((H - y - 140 - (n - 1) * dayGap) / n), 148);
+  const accentW = 4;
+
+  activeDays.forEach((day, idx) => {
+    const color = JUNO[state.days.indexOf(day)];
+    const bx = PAD;
+    const by = y + idx * (dayH + dayGap);
+    const bw = W - PAD * 2;
+    const bh = dayH;
+
+    // Fond de la carte jour
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    roundRect(ctx, bx, by, bw, bh, 3);
+    ctx.fill();
+
+    // Barre accent gauche
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.9;
+    roundRect(ctx, bx, by, accentW, bh, [3,0,0,3]);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    const tx = bx + accentW + 20;
+    const rowTop = by + bh * 0.40;
+    const rowBot = by + bh * 0.78;
+
+    // Nom du jour — haut gauche
+    ctx.textAlign = 'left';
+    ctx.fillStyle = color;
+    ctx.font = `700 ${Math.round(bh * 0.32)}px Rajdhani`;
+    ctx.letterSpacing = '3px';
+    ctx.fillText(day.name.toUpperCase(), tx, rowTop);
+
+    // Activité — bas gauche, visible
+    if (day.game) {
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#f0ede8';
+      ctx.font = `600 ${Math.round(bh * 0.27)}px Rajdhani`;
+      ctx.letterSpacing = '1px';
+      ctx.fillText(day.game, tx, rowBot);
+    }
+
+    // Horaires — haut droite
+    if (day.start || day.end) {
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#f5dfa0';
+      ctx.font = `400 ${Math.round(bh * 0.20)}px "Share Tech Mono"`;
+      ctx.letterSpacing = '1px';
+      const timeStr = [day.start, day.end].filter(Boolean).join(' → ');
+      ctx.fillText(timeStr, bx + bw - 16, rowTop);
+    }
+
+    // Note — bas droite
+    if (day.note) {
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#a09880';
+      ctx.font = `400 ${Math.round(bh * 0.17)}px "Share Tech Mono"`;
+      ctx.letterSpacing = '1px';
+      ctx.fillText(day.note, bx + bw - 16, rowBot);
+    }
+  });
+
+  // ── Bas de page
+  const botY = H - 72;
+
+  // Liseré bas
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillRect(PAD, botY - 24, W - PAD*2, 1);
+
+  // Handle
+  if (state.sub) {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f5dfa0';
+    ctx.font = `700 ${Math.round(W * 0.042)}px Rajdhani`;
+    ctx.letterSpacing = '4px';
+    ctx.fillText(state.sub.toUpperCase(), W/2, botY);
+  }
+
+  // Note de bas
+  if (state.note) {
+    ctx.fillStyle = '#a09880';
+    ctx.font = `400 ${Math.round(W * 0.024)}px "Share Tech Mono"`;
+    ctx.letterSpacing = '1px';
+    ctx.fillText(state.note, W/2, botY + 34);
+  }
+
+  // Liseré bas 4 couleurs
+  stripeCols.forEach((c, i) => {
+    ctx.fillStyle = c;
+    ctx.globalAlpha = 0.7;
+    ctx.fillRect(i * W/4, H - stripeH, W/4, stripeH);
+  });
+  ctx.globalAlpha = 1;
+}
+
+// Utilitaire roundRect compatible
+function roundRect(ctx, x, y, w, h, r) {
+  if (typeof r === 'number') r = [r,r,r,r];
+  const [tl,tr,br,bl] = r;
+  ctx.beginPath();
+  ctx.moveTo(x + tl, y);
+  ctx.lineTo(x + w - tr, y);
+  ctx.arcTo(x+w, y, x+w, y+tr, tr);
+  ctx.lineTo(x+w, y+h-br);
+  ctx.arcTo(x+w, y+h, x+w-br, y+h, br);
+  ctx.lineTo(x+bl, y+h);
+  ctx.arcTo(x, y+h, x, y+h-bl, bl);
+  ctx.lineTo(x, y+tl);
+  ctx.arcTo(x, y, x+tl, y, tl);
+  ctx.closePath();
+}
+
+/* ════════════════════════════════════════════
+   EXPORT PNG
+════════════════════════════════════════════ */
+function exportPNG() {
+  // Regénère en pleine résolution
+  const W = state.format.w;
+  const H = state.format.h;
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = W;
+  offscreen.height = H;
+  const octx = offscreen.getContext('2d');
+  // Redirige ctx vers offscreen temporairement
+  const savedCtx = ctx;
+  Object.defineProperty(window, '_exportCtx', { value: octx, configurable: true });
+
+  // Dessin direct sur l'offscreen
+  const tmp = canvas.getContext('2d');
+  document.fonts.ready.then(() => {
+    drawCardTo(octx, W, H);
+    const link = document.createElement('a');
+    const dateStr = state.weekDate ? state.weekDate.replaceAll('-','') : 'programme';
+    link.download = `toofi-programme-${dateStr}.png`;
+    link.href = offscreen.toDataURL('image/png');
+    link.click();
+  });
+}
+
+function drawCardTo(c, W, H) {
+  // Sauvegarde le ctx courant et utilise c
+  const old = window._drawCtx;
+  window._drawCtx = c;
+  const origCtx = ctx;
+  // On redessine avec le bon contexte
+  const PAD = 64;
+  const JUNO = ['#b13a26','#3c4bb0','#f87d37','#e9bc3f','#b13a26','#6478dc','#f87d37'];
+  const stripeH = 6;
+  const stripeCols = ['#b13a26','#3c4bb0','#f87d37','#e9bc3f'];
+
+  c.fillStyle = '#1e1c18'; c.fillRect(0,0,W,H);
+  c.fillStyle = 'rgba(255,255,255,0.008)';
+  for (let y=0;y<H;y+=3) c.fillRect(0,y,W,1);
+  stripeCols.forEach((col,i)=>{ c.fillStyle=col; c.fillRect(i*W/4,0,W/4,stripeH); });
+
+  const rL=c.createLinearGradient(0,0,0,H);
+  rL.addColorStop(0,'#b13a26');rL.addColorStop(.33,'#3c4bb0');rL.addColorStop(.66,'#f87d37');rL.addColorStop(1,'#e9bc3f');
+  c.fillStyle=rL;c.globalAlpha=.6;c.fillRect(0,0,3,H);
+  const rR=c.createLinearGradient(0,0,0,H);
+  rR.addColorStop(0,'#e9bc3f');rR.addColorStop(.33,'#f87d37');rR.addColorStop(.66,'#3c4bb0');rR.addColorStop(1,'#b13a26');
+  c.fillStyle=rR;c.fillRect(W-3,0,3,H);c.globalAlpha=1;
+
+  const vig=c.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.75);
+  vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,0.4)');
+  c.fillStyle=vig;c.fillRect(0,0,W,H);
+
+  let y=stripeH+95;
+  c.font=`700 ${Math.round(W*.085)}px Rajdhani`;c.letterSpacing='6px';
+  const nm='TOOFI';c.fillStyle='rgba(240,237,232,0.9)';
+  const nmW=c.measureText(nm).width;
+  const tW2=c.measureText('T').width;
+  const toW2=c.measureText('TO').width;
+  c.fillText('T',W/2-nmW/2,y);
+  c.fillStyle='#6478dc';c.fillText('O',W/2-nmW/2+tW2,y);
+  c.fillStyle='rgba(240,237,232,0.9)';c.fillText('OFI',W/2-nmW/2+toW2,y);
+  y+=Math.round(W*.032);
+
+  c.fillStyle='rgba(255,255,255,0.08)';c.fillRect(PAD,y,W-PAD*2,1);y+=28;
+  c.fillStyle='#f5dfa0';c.font=`600 ${Math.round(W*.038)}px Rajdhani`;
+  c.letterSpacing='4px';c.textAlign='center';
+  c.fillText((state.title||'Programme de stream').toUpperCase(),W/2,y);
+  y+=Math.round(W*.03);
+
+  if(state.weekDate){
+    c.fillStyle='#a09880';c.font=`400 ${Math.round(W*.022)}px "Share Tech Mono"`;
+    c.letterSpacing='2px';c.fillText(formatWeekDate(state.weekDate),W/2,y);
+  }
+  y+=44;
+
+  const activeDays=state.days.filter(d=>d.enabled);
+  const n=Math.max(activeDays.length,1);
+  const dayGap=12;
+  const dayH=Math.min(Math.round((H-y-140-(n-1)*dayGap)/n),148);
+
+  activeDays.forEach((day,idx)=>{
+    const color=JUNO[state.days.indexOf(day)];
+    const bx=PAD,by=y+idx*(dayH+dayGap),bw=W-PAD*2,bh=dayH;
+    c.fillStyle='rgba(255,255,255,0.03)';
+    roundRectC(c,bx,by,bw,bh,3);c.fill();
+    c.fillStyle=color;c.globalAlpha=.9;
+    roundRectC(c,bx,by,4,bh,[3,0,0,3]);c.fill();c.globalAlpha=1;
+    const tx=bx+4+20,rowTop=by+bh*.40,rowBot=by+bh*.78;
+    c.textAlign='left';c.fillStyle=color;
+    c.font=`700 ${Math.round(bh*.32)}px Rajdhani`;c.letterSpacing='3px';
+    c.fillText(day.name.toUpperCase(),tx,rowTop);
+    if(day.game){
+      c.textAlign='left';c.fillStyle='#f0ede8';
+      c.font=`600 ${Math.round(bh*.27)}px Rajdhani`;c.letterSpacing='1px';
+      c.fillText(day.game,tx,rowBot);
+    }
+    if(day.start||day.end){
+      c.textAlign='right';c.fillStyle='#f5dfa0';
+      c.font=`400 ${Math.round(bh*.20)}px "Share Tech Mono"`;c.letterSpacing='1px';
+      c.fillText([day.start,day.end].filter(Boolean).join(' → '),bx+bw-16,rowTop);
+    }
+    if(day.note){
+      c.textAlign='right';c.fillStyle='#a09880';
+      c.font=`400 ${Math.round(bh*.17)}px "Share Tech Mono"`;c.letterSpacing='1px';
+      c.fillText(day.note,bx+bw-16,rowBot);
+    }
+  });
+
+  const botY=H-72;
+  c.fillStyle='rgba(255,255,255,0.06)';c.fillRect(PAD,botY-24,W-PAD*2,1);
+  if(state.sub){c.textAlign='center';c.fillStyle='#f5dfa0';c.font=`700 ${Math.round(W*.042)}px Rajdhani`;c.letterSpacing='4px';c.fillText(state.sub.toUpperCase(),W/2,botY);}
+  if(state.note){c.fillStyle='#a09880';c.font=`400 ${Math.round(W*.024)}px "Share Tech Mono"`;c.letterSpacing='1px';c.fillText(state.note,W/2,botY+34);}
+  stripeCols.forEach((col,i)=>{c.fillStyle=col;c.globalAlpha=.7;c.fillRect(i*W/4,H-stripeH,W/4,stripeH);});
+  c.globalAlpha=1;
+}
+
+function roundRectC(c,x,y,w,h,r){
+  if(typeof r==='number')r=[r,r,r,r];
+  const[tl,tr,br,bl]=r;
+  c.beginPath();c.moveTo(x+tl,y);c.lineTo(x+w-tr,y);c.arcTo(x+w,y,x+w,y+tr,tr);
+  c.lineTo(x+w,y+h-br);c.arcTo(x+w,y+h,x+w-br,y+h,br);
+  c.lineTo(x+bl,y+h);c.arcTo(x,y+h,x,y+h-bl,bl);
+  c.lineTo(x,y+tl);c.arcTo(x,y,x+tl,y,tl);c.closePath();
+}
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+buildEditor();
+document.fonts.ready.then(() => render());
+window.addEventListener('resize', () => render());
+</script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toofi — Essai Logo</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --ground:  #1e1c18;
+  --text:    #f0ede8;
+  --red:     #b13a26;
+  --blue:    #3c4bb0;
+  --orange:  #f87d37;
+  --yellow:  #e9bc3f;
+  --dim:     rgba(240,237,232,0.25);
+  --sep:     rgba(255,255,255,0.06);
+}
+
+html, body {
+  background: var(--ground);
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.page-header {
+  padding: 52px 40px 36px;
+  text-align: center;
+}
+.page-title {
+  font-size: 9px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 8px;
+}
+.page-sub {
+  font-size: 7px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(240,237,232,0.12);
+}
+
+/* ── SECTION ── */
+.row-section {
+  border-top: 1px solid var(--sep);
+}
+.row-label {
+  padding: 22px 40px 0;
+  font-size: 8px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* ── GRILLE 4 COULEURS ── */
+.quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+.quad-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 52px 24px 40px;
+  gap: 22px;
+  min-height: 260px;
+}
+.quad-cell + .quad-cell {
+  border-left: 1px solid var(--sep);
+}
+
+/* ── STACK ── */
+.stack {
+  position: relative;
+  display: inline-block;
+  line-height: 0.88;
+}
+.t-tnr {
+  font-family: 'Times New Roman', Times, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(52px, 6vw, 88px);
+  position: absolute;
+  top: 0; left: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.t-av {
+  font-family: 'Avenir Next Condensed', 'Avenir', 'Arial Narrow', 'Gill Sans MT Condensed', sans-serif;
+  font-weight: 400;
+  font-size: clamp(52px, 6vw, 88px);
+  letter-spacing: -0.01em;
+  position: relative;
+  white-space: nowrap;
+}
+
+/* ── PLEIN : même couleur stricte, opacité identique ── */
+.solid-red    .t-av, .solid-red    .t-tnr { color: var(--red); }
+.solid-blue   .t-av, .solid-blue   .t-tnr { color: var(--blue); }
+.solid-orange .t-av, .solid-orange .t-tnr { color: var(--orange); }
+.solid-yellow .t-av, .solid-yellow .t-tnr { color: var(--yellow); }
+
+/* ── CONTOURS : Avenir tracé seul, même couleur sur les deux ── */
+.out-red    .t-av { color: transparent; -webkit-text-stroke: 1.5px var(--red); }
+.out-red    .t-tnr { color: var(--red); }
+
+.out-blue   .t-av { color: transparent; -webkit-text-stroke: 1.5px var(--blue); }
+.out-blue   .t-tnr { color: var(--blue); }
+
+.out-orange .t-av { color: transparent; -webkit-text-stroke: 1.5px var(--orange); }
+.out-orange .t-tnr { color: var(--orange); }
+
+.out-yellow .t-av { color: transparent; -webkit-text-stroke: 1.5px var(--yellow); }
+.out-yellow .t-tnr { color: var(--yellow); }
+
+/* ── ANIMÉ ── */
+@keyframes shimmer {
+  0%   { background-position: 0%   0%;   }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0%   0%;   }
+}
+.shim-section {
+  border-top: 1px solid var(--sep);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.shim-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 52px 24px 48px;
+  gap: 22px;
+  min-height: 300px;
+}
+.shim-cell + .shim-cell {
+  border-left: 1px solid var(--sep);
+}
+
+/* Plein animé */
+.shim .t-av,
+.shim .t-tnr {
+  background: linear-gradient(
+    135deg,
+    var(--red)    0%,
+    var(--blue)   28%,
+    var(--orange) 55%,
+    var(--yellow) 78%,
+    var(--red)    100%
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 10s ease-in-out infinite;
+}
+.shim .t-av  { font-size: clamp(72px, 14vw, 180px); letter-spacing: -0.01em; }
+.shim .t-tnr { font-size: clamp(72px, 14vw, 180px); }
+
+/* Contours animé — même animation shimmer sur les deux fonts, stroke fond pour la distinction */
+.shim-out .t-tnr,
+.shim-out .t-av {
+  background: linear-gradient(
+    135deg,
+    var(--red)    0%,
+    var(--blue)   28%,
+    var(--orange) 55%,
+    var(--yellow) 78%,
+    var(--red)    100%
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 10s ease-in-out infinite;
+}
+.shim-out .t-tnr { font-size: clamp(72px, 14vw, 180px); }
+.shim-out .t-av  {
+  font-size: clamp(72px, 14vw, 180px);
+  letter-spacing: -0.01em;
+  -webkit-text-stroke: 15px var(--ground);
+}
+
+/* ── CAPTION ── */
+.caption {
+  font-size: 7px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-align: center;
+  line-height: 2;
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-title">Essai logo · Toofi</div>
+  <div class="page-sub">Times New Roman italic + Avenir Condensed · superposition · deux formes, une couleur</div>
+</header>
+
+<!-- ROW A : PLEIN -->
+<section class="row-section">
+  <div class="row-label">Plein — Avenir rempli</div>
+  <div class="quad">
+
+    <div class="quad-cell">
+      <div class="stack solid-red">
+        <div class="t-tnr">Toofi</div>
+        <div class="t-av">Toofi</div>
+      </div>
+      <div class="caption">Rouge</div>
+    </div>
+
+    <div class="quad-cell">
+      <div class="stack solid-blue">
+        <div class="t-tnr">Toofi</div>
+        <div class="t-av">Toofi</div>
+      </div>
+      <div class="caption">Bleu</div>
+    </div>
+
+    <div class="quad-cell">
+      <div class="stack solid-orange">
+        <div class="t-tnr">Toofi</div>
+        <div class="t-av">Toofi</div>
+      </div>
+      <div class="caption">Orange</div>
+    </div>
+
+    <div class="quad-cell">
+      <div class="stack solid-yellow">
+        <div class="t-tnr">Toofi</div>
+        <div class="t-av">Toofi</div>
+      </div>
+      <div class="caption">Jaune</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ROW B : CONTOURS -->
+<section class="row-section">
+  <div class="row-label">Contours — Avenir en tracé seul</div>
+  <div class="quad">
+
+    <div class="quad-cell">
+      <div class="stack out-red">
+        <div class="t-tnr">Toofi</div>
+        <div class="t-av">Toofi</div>
+      </div>
+      <div class="caption">Rouge</div>
+    </div>
+
+    <div class="quad-cell">
+      <div class="stack out-blue">
+        <div class="t-tnr">Toofi</div>
+        <div class="t-av">Toofi</div>
+      </div>
+      <div class="caption">Bleu</div>
+    </div>
+
+    <div class="quad-cell">
+      <div class="stack out-orange">
+        <div class="t-tnr">Toofi</div>
+        <div class="t-av">Toofi</div>
+      </div>
+      <div class="caption">Orange</div>
+    </div>
+
+    <div class="quad-cell">
+      <div class="stack out-yellow">
+        <div class="t-tnr">Toofi</div>
+        <div class="t-av">Toofi</div>
+      </div>
+      <div class="caption">Jaune</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION C : ANIMÉ -->
+<section class="shim-section">
+
+  <div class="shim-cell">
+    <div class="stack shim">
+      <div class="t-tnr">Toofi</div>
+      <div class="t-av">Toofi</div>
+    </div>
+    <div class="caption">Animé · Plein</div>
+  </div>
+
+  <div class="shim-cell">
+    <div class="stack shim-out">
+      <div class="t-tnr">Toofi</div>
+      <div class="t-av">Toofi</div>
+    </div>
+    <div class="caption">Animé · Contours</div>
+  </div>
+
+</section>
+
+</body>
+</html>

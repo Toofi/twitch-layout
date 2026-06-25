@@ -245,6 +245,8 @@
 </head>
 <body>
 
+<audio id="alertSfx" src="fl-studio-startup-sound.mp3" preload="auto"></audio>
+
 <div class="alert-wrap" id="alertWrap">
   <div class="alert-box" id="alertBox">
     <div class="alert-flash"  id="alertFlash"></div>
@@ -406,6 +408,11 @@ function showAlert(type, params) {
   progress.style.background = cfg.color;
   progress.style.transition = 'none';
   progress.style.transform  = 'scaleX(1)';
+
+  // Son
+  const sfx = document.getElementById('alertSfx');
+  sfx.currentTime = 0;
+  sfx.play().catch(() => {});
 
   // Apparition
   wrap.classList.remove('hold','out','in');

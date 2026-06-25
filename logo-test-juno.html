@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toofi — Essai Logo Juno</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --juno-red:    #b13a26;
+  --juno-blue:   #3c4bb0;
+  --juno-orange: #f87d37;
+  --juno-yellow: #e9bc3f;
+  --bg:          #1e1c18;
+  --text:        #f0ede8;
+  --dim:         rgba(240,237,232,0.25);
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+}
+
+/* ── CHROME JUNO (rack stripes + bandes) ── */
+.rack-l, .rack-r {
+  position: fixed;
+  top: 0; bottom: 0;
+  width: 3px;
+  opacity: 0.55;
+  z-index: 100;
+  pointer-events: none;
+}
+.rack-l {
+  left: 0;
+  background: linear-gradient(180deg,
+    var(--juno-red), var(--juno-blue),
+    var(--juno-orange), var(--juno-yellow)
+  );
+}
+.rack-r {
+  right: 0;
+  background: linear-gradient(180deg,
+    var(--juno-yellow), var(--juno-orange),
+    var(--juno-blue), var(--juno-red)
+  );
+}
+.band-top, .band-bot {
+  position: fixed;
+  left: 0; right: 0;
+  height: 4px;
+  display: flex;
+  z-index: 100;
+  pointer-events: none;
+}
+.band-top { top: 0; }
+.band-bot { bottom: 0; }
+.b { flex: 1; opacity: 0.85; }
+.b-r { background: var(--juno-red); }
+.b-b { background: var(--juno-blue); }
+.b-o { background: var(--juno-orange); }
+.b-y { background: var(--juno-yellow); }
+
+/* ── HÉRO ── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 82vh;
+  padding: 60px 40px 48px;
+  gap: 32px;
+}
+
+/* ── STACK DE BASE ── */
+.stack {
+  position: relative;
+  display: inline-block;
+  line-height: 0.88;
+}
+.t-tnr {
+  font-family: 'Times New Roman', Times, serif;
+  font-style: italic;
+  font-weight: 400;
+  position: absolute;
+  top: 0; left: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.t-av {
+  font-family: 'Avenir Next Condensed', 'Avenir', 'Arial Narrow', 'Gill Sans MT Condensed', sans-serif;
+  font-weight: 400;
+  position: relative;
+  white-space: nowrap;
+}
+
+/* ── HÉRO : Orange × Blanc ── */
+/* L'orange du Juno (chaud, analogique) pénètre le blanc de l'Avenir (froid, numérique) */
+.hero .t-av {
+  font-size: clamp(72px, 18vw, 260px);
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.hero .t-tnr {
+  font-size: clamp(72px, 18vw, 260px);
+  color: var(--juno-orange);
+  animation: haloBreath 5s ease-in-out infinite;
+}
+@keyframes haloBreath {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.68; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero .t-tnr { animation: none; opacity: 0.55; }
+}
+
+/* ── GRILLE 2×2 ── */
+.quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.quad-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px 52px;
+  gap: 22px;
+  min-height: 280px;
+}
+.quad-cell:nth-child(2)  { border-left: 1px solid rgba(255,255,255,0.05); }
+.quad-cell:nth-child(3)  { border-top:  1px solid rgba(255,255,255,0.05); }
+.quad-cell:nth-child(4)  {
+  border-left: 1px solid rgba(255,255,255,0.05);
+  border-top:  1px solid rgba(255,255,255,0.05);
+}
+
+/* ── ROUGE : offset ── */
+.var-r .t-av  { font-size: clamp(44px, 7vw, 100px); color: var(--text); letter-spacing: -0.01em; }
+.var-r .t-tnr { font-size: clamp(44px, 7vw, 100px); color: var(--juno-red); opacity: 0.85; transform: translate(6px, 5px); }
+
+/* ── BLEU : chaud sous froid ── */
+.var-b .t-av  { font-size: clamp(44px, 7vw, 100px); color: var(--juno-blue); letter-spacing: -0.01em; }
+.var-b .t-tnr { font-size: clamp(44px, 7vw, 100px); color: var(--juno-yellow); opacity: 0.65; }
+
+/* ── ORANGE : tracé sur matière ── */
+.var-o .t-av  {
+  font-size: clamp(44px, 7vw, 100px);
+  color: transparent;
+  -webkit-text-stroke: 1px var(--text);
+  letter-spacing: -0.01em;
+}
+.var-o .t-tnr { font-size: clamp(44px, 7vw, 100px); color: var(--juno-orange); opacity: 0.7; }
+
+/* ── JAUNE : lumière ── */
+.var-y .t-av  { font-size: clamp(44px, 7vw, 100px); color: var(--juno-yellow); letter-spacing: -0.01em; }
+.var-y .t-tnr { font-size: clamp(44px, 7vw, 100px); color: var(--text); opacity: 0.18; }
+
+/* ── LABELS ── */
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.caption {
+  font-size: 8px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-align: center;
+  line-height: 2;
+}
+</style>
+</head>
+<body>
+
+<!-- chrome -->
+<div class="rack-l"></div>
+<div class="rack-r"></div>
+<div class="band-top">
+  <div class="b b-r"></div><div class="b b-b"></div>
+  <div class="b b-o"></div><div class="b b-y"></div>
+</div>
+<div class="band-bot">
+  <div class="b b-y"></div><div class="b b-o"></div>
+  <div class="b b-b"></div><div class="b b-r"></div>
+</div>
+
+<section class="hero">
+  <div class="eyebrow">Essai logo · Toofi · Palette Juno</div>
+
+  <div class="stack">
+    <div class="t-tnr">Toofi</div>
+    <div class="t-av">Toofi</div>
+  </div>
+
+  <div class="caption">
+    Times New Roman italic · Avenir Condensed Regular<br>
+    orange analogique · blanc numérique
+  </div>
+</section>
+
+<section class="quad">
+
+  <div class="quad-cell">
+    <div class="stack var-r">
+      <div class="t-tnr">Toofi</div>
+      <div class="t-av">Toofi</div>
+    </div>
+    <div class="caption">Rouge<br>l'italique glisse derrière</div>
+  </div>
+
+  <div class="quad-cell">
+    <div class="stack var-b">
+      <div class="t-tnr">Toofi</div>
+      <div class="t-av">Toofi</div>
+    </div>
+    <div class="caption">Bleu × Jaune<br>le chaud sous le froid</div>
+  </div>
+
+  <div class="quad-cell">
+    <div class="stack var-o">
+      <div class="t-tnr">Toofi</div>
+      <div class="t-av">Toofi</div>
+    </div>
+    <div class="caption">Orange<br>le contour révèle la matière</div>
+  </div>
+
+  <div class="quad-cell">
+    <div class="stack var-y">
+      <div class="t-tnr">Toofi</div>
+      <div class="t-av">Toofi</div>
+    </div>
+    <div class="caption">Jaune<br>le romain fantôme</div>
+  </div>
+
+</section>
+
+</body>
+</html>

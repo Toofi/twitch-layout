@@ -20,7 +20,7 @@
     background: var(--bg);
   }
 
-  /* ── FOND ANIMÉ — dégradé 4 couleurs qui dérive doucement ── */
+  /* ── FOND — dégradé 4 couleurs statique ── */
   .bg-gradient {
     position: absolute; inset: 0;
     background: linear-gradient(
@@ -33,12 +33,6 @@
       rgba(30,28,24,1)       85%,
       rgba(233,188,63,0.06)  100%
     );
-    background-size: 500% 100%;
-    animation: bgDrift 36s ease-in-out infinite alternate;
-  }
-  @keyframes bgDrift {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
   }
 
   /* ── LÉGÈRE RESPIRATION VERTICALE ── */
@@ -197,26 +191,23 @@
     text-shadow:0 1px 4px rgba(0,0,0,0.95);
   }
 
-  /* ── WAVEFORM CANVAS ── */
-  #waveCanvas {
-    position: absolute;
-    bottom: 0; left: 0;
-    width: 1920px; height: 200px;
+  /* ── FONDUS DE COULEUR ── */
+  .color-wash {
+    position: absolute; inset: 0;
     pointer-events: none;
-  }
-
-  /* Halo réactif au centre — s'intensifie avec le volume ── */
-  #volHalo {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      ellipse 60% 50% at 50% 100%,
-      rgba(60,75,176,0) 0%,
-      transparent 70%
-    );
-    pointer-events: none;
-    transition: opacity 0.08s linear;
     opacity: 0;
+  }
+  .cw-r { background: radial-gradient(ellipse 55% 40% at 20% 55%, rgba(177,58,38,0.13) 0%, transparent 70%);
+           animation: cwFade 20s ease-in-out infinite 0s; }
+  .cw-b { background: radial-gradient(ellipse 50% 45% at 78% 42%, rgba(60,75,176,0.13) 0%, transparent 70%);
+           animation: cwFade 25s ease-in-out infinite 6s; }
+  .cw-o { background: radial-gradient(ellipse 52% 38% at 55% 70%, rgba(248,125,55,0.11) 0%, transparent 70%);
+           animation: cwFade 18s ease-in-out infinite 11s; }
+  .cw-y { background: radial-gradient(ellipse 48% 42% at 35% 30%, rgba(233,188,63,0.11) 0%, transparent 70%);
+           animation: cwFade 22s ease-in-out infinite 4s; }
+  @keyframes cwFade {
+    0%, 100% { opacity: 0; }
+    35%, 65%  { opacity: 1; }
   }
 </style>
 </head>
@@ -230,8 +221,10 @@
   <div class="vignette"></div>
   <div class="rack-l"></div>
   <div class="rack-r"></div>
-  <div id="volHalo"></div>
-  <canvas id="waveCanvas" width="1920" height="200"></canvas>
+  <div class="color-wash cw-r"></div>
+  <div class="color-wash cw-b"></div>
+  <div class="color-wash cw-o"></div>
+  <div class="color-wash cw-y"></div>
 
   <!-- ── INFOS BAS DROITE ── -->
   <div class="info-panel">
@@ -258,149 +251,6 @@
   </div>
 
 <script>
-/* ════════════════════════════════════════════════
-   WAVEFORM — réactif au micro (getUserMedia)
-   ════════════════════════════════════════════════ */
-
-const canvas  = document.getElementById('waveCanvas');
-const ctx     = canvas.getContext('2d');
-const halo    = document.getElementById('volHalo');
-
-const W = 1920, H = 200;
-
-// Couleurs JUNO pour les barres (cycle sur les bins)
-const COLORS = ['#b13a26', '#3c4bb0', '#f87d37', '#e9bc3f'];
-
-// Valeurs lissées pour éviter le "tremblement" (inertie)
-let smoothed = null;
-let analyser = null;
-let dataArray = null;
-
-// Inertie : mélange la valeur brute avec la précédente
-const SMOOTH = 0.72; // 0 = pas de lissage, proche de 1 = très lent
-
-function lerp(a, b, t) { return a + (b - a) * t; }
-
-async function initAudio() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    const audioCtx = new AudioContext();
-    const source   = audioCtx.createMediaStreamSource(stream);
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;          // 128 bins
-    analyser.smoothingTimeConstant = 0.75;
-    source.connect(analyser);
-    dataArray = new Uint8Array(analyser.frequencyBinCount);
-    draw();
-  } catch (e) {
-    // Pas de micro — animation silencieuse (barres au repos)
-    dataArray = new Uint8Array(128).fill(0);
-    smoothed  = new Float32Array(128).fill(0);
-    drawSilent();
-  }
-}
-
-function draw() {
-  requestAnimationFrame(draw);
-
-  analyser.getByteFrequencyData(dataArray);
-
-  // Lissage inertiel
-  if (!smoothed) smoothed = new Float32Array(dataArray.length);
-  for (let i = 0; i < dataArray.length; i++) {
-    smoothed[i] = lerp(dataArray[i], smoothed[i], SMOOTH);
-  }
-
-  renderBars();
-}
-
-function drawSilent() {
-  requestAnimationFrame(drawSilent);
-  renderBars();
-}
-
-function renderBars() {
-  ctx.clearRect(0, 0, W, H);
-
-  const bins    = smoothed ? smoothed.length : 0;
-  if (!bins) return;
-
-  // On n'affiche que les 80 premiers bins (basses + médiums, plus visuels)
-  const SHOW    = 80;
-  const barW    = 10;
-  const gap     = 4;
-  const totalW  = SHOW * (barW + gap) - gap;
-  const startX  = (W - totalW) / 2;
-  const maxH    = H - 12;   // hauteur max des barres
-
-  let sumVol = 0;
-
-  for (let i = 0; i < SHOW; i++) {
-    const val    = smoothed[i] / 255;           // 0..1
-    const barH   = Math.max(2, val * maxH);
-    const x      = startX + i * (barW + gap);
-    const y      = H - barH;
-
-    // Couleur : cycle sur les 4 JUNO, teinte plus vive selon l'amplitude
-    const colorIdx = i % COLORS.length;
-    const base     = COLORS[colorIdx];
-
-    // Opacité proportionnelle à l'amplitude + minimum visible
-    const alpha = 0.12 + val * 0.65;
-
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle   = base;
-    ctx.fillRect(x, y, barW, barH);
-
-    // Petite lueur au sommet de chaque barre active
-    if (val > 0.15) {
-      const glowAlpha = val * 0.35;
-      ctx.globalAlpha = glowAlpha;
-      const grad = ctx.createLinearGradient(x, y - 6, x, y + 4);
-      grad.addColorStop(0, base);
-      grad.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad;
-      ctx.fillRect(x - 1, y - 6, barW + 2, 8);
-    }
-
-    sumVol += val;
-  }
-
-  ctx.globalAlpha = 1;
-
-  // Reflet miroir en dessous (dégradé vers transparent)
-  ctx.save();
-  ctx.translate(0, H);
-  ctx.scale(1, -0.25);
-  ctx.globalAlpha = 0.18;
-  for (let i = 0; i < SHOW; i++) {
-    const val  = smoothed[i] / 255;
-    const barH = Math.max(2, val * maxH);
-    const x    = startX + i * (barW + gap);
-    ctx.fillStyle = COLORS[i % COLORS.length];
-    ctx.fillRect(x, 0, barW, barH);
-  }
-  ctx.restore();
-  ctx.globalAlpha = 1;
-
-  // Halo réactif au volume global
-  const avgVol = sumVol / SHOW;
-  halo.style.opacity = (avgVol * 0.55).toFixed(3);
-  // Teinte du halo suit la couleur dominante (bin le plus fort)
-  const peakBin   = Array.from(smoothed).slice(0, SHOW)
-                         .reduce((m, v, i, a) => v > a[m] ? i : m, 0);
-  const haloColor = COLORS[peakBin % COLORS.length]
-    .replace('#', '')
-    .match(/../g)
-    .map(h => parseInt(h,16))
-    .join(',');
-  halo.style.background =
-    `radial-gradient(ellipse 80% 60% at 50% 100%, rgba(${haloColor},0.18) 0%, transparent 70%)`;
-}
-
-/* ── Lancement dès que la page est prête ── */
-document.addEventListener('DOMContentLoaded', () => initAudio());
-
 /* ════════════════════════════════════════════════
    HORLOGE
    ════════════════════════════════════════════════ */

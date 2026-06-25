@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Test audio device — UA-101 / OBS</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="audio-reactive.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
+    --bg:          #1e1c18;
+    --panel:       #28261f;
+    --line:        rgba(255,255,255,0.08);
+    --white:       #f0ede8;
+    --ivory:       #f5dfa0;
+    --muted:       #a09880;
+  }
+  html, body {
+    width: 1920px; height: 1080px;
+    background: var(--bg);
+    overflow: hidden;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--white);
+  }
+
+  /* ── PANNEAU DE CONTRÔLE (masquable) ── */
+  #controls {
+    position: absolute;
+    top: 28px; left: 28px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--juno-orange);
+    border-radius: 0 4px 4px 0;
+    padding: 18px 20px;
+    z-index: 100;
+    width: 420px;
+    transition: opacity .3s, transform .3s;
+  }
+  #controls.hidden {
+    opacity: 0;
+    transform: translateX(-30px);
+    pointer-events: none;
+  }
+  #controls h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+  }
+  #controls label {
+    display: block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  select, button {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 9px 10px;
+    outline: none;
+    cursor: pointer;
+  }
+  button {
+    margin-top: 10px;
+    background: var(--juno-orange);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 14px;
+    letter-spacing: 2px; text-transform: uppercase;
+    border: none;
+    transition: filter .15s;
+  }
+  button:hover { filter: brightness(1.15); }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 11px;
+  }
+  #status {
+    margin-top: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 1px;
+    color: var(--muted); line-height: 1.6;
+  }
+  #status.ok  { color: var(--juno-blue-bright); }
+  #status.err { color: var(--juno-red); }
+
+  .hint {
+    margin-top: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px; letter-spacing: 1px;
+    color: rgba(160,152,128,0.5); line-height: 1.7;
+  }
+
+  /* ── VISUALISATION ── */
+  #viz {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 60px;
+  }
+
+  /* Cercle réactif central */
+  #pulse {
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    border: 3px solid var(--juno-orange);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.05s linear, box-shadow 0.05s linear;
+  }
+  #pulse-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* VU-mètre volume */
+  .meter-wrap { width: 700px; }
+  .meter-label {
+    display: flex; justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .meter {
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--juno-blue), var(--juno-orange), var(--juno-red));
+    transition: width 0.05s linear;
+  }
+
+  /* Bandes */
+  .bands { display: flex; gap: 18px; }
+  .band-col { text-align: center; }
+  .band-bar-bg {
+    width: 60px; height: 200px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    position: relative; overflow: hidden;
+    display: flex; align-items: flex-end;
+  }
+  .band-bar { width: 100%; height: 0%; transition: height 0.05s linear; }
+  .band-name {
+    margin-top: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Spectre */
+  #spectrum {
+    display: flex; align-items: flex-end; gap: 3px;
+    height: 160px; width: 900px; justify-content: center;
+  }
+  .sbar { flex: 1; min-height: 2px; border-radius: 2px 2px 0 0; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ CONTRÔLES ═══════════ -->
+<div id="controls">
+  <h1>Test source audio · OBS</h1>
+  <label>Périphérique d'entrée</label>
+  <select id="deviceSelect"><option value="">— autorise d'abord l'accès audio —</option></select>
+  <label style="margin-top:12px">Canaux à analyser (rempli après détection)</label>
+  <select id="chanSelect" style="font-family:'Share Tech Mono',monospace">
+    <option value="">Tous les canaux</option>
+  </select>
+  <div id="chanInfo" style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);margin-top:6px"></div>
+  <button id="startBtn">▶ Autoriser & démarrer</button>
+  <button id="hideBtn" class="secondary">Masquer ce panneau (H)</button>
+  <div id="status">Clique "Démarrer" pour autoriser l'accès audio.</div>
+  <div class="hint">
+    Sélectionne ton UA-101 dans la liste.<br>
+    Le choix est mémorisé pour les prochains lancements.<br>
+    Sert la page en http://localhost (pas file://) pour OBS.
+  </div>
+</div>
+
+<!-- ═══════════ VISUALISATION ═══════════ -->
+<div id="viz">
+  <div id="pulse"><span id="pulse-label">silence</span></div>
+
+  <div class="meter-wrap">
+    <div class="meter-label"><span>Volume global</span><span id="volPct">0%</span></div>
+    <div class="meter"><div class="meter-fill" id="volFill"></div></div>
+  </div>
+
+  <div class="bands">
+    <div class="band-col">
+      <div class="band-bar-bg"><div class="band-bar" id="bassBar" style="background:var(--juno-red)"></div></div>
+      <div class="band-name">Bass</div>
+    </div>
+    <div class="band-col">
+      <div class="band-bar-bg"><div class="band-bar" id="midBar" style="background:var(--juno-orange)"></div></div>
+      <div class="band-name">Mid</div>
+    </div>
+    <div class="band-col">
+      <div class="band-bar-bg"><div class="band-bar" id="trebleBar" style="background:var(--juno-yellow)"></div></div>
+      <div class="band-name">Treble</div>
+    </div>
+  </div>
+
+  <div id="spectrum"></div>
+</div>
+
+<script>
+const LS_KEY = 'toofi-audio-device';
+const JUNO   = ['#b13a26', '#3c4bb0', '#f87d37', '#e9bc3f'];
+
+const els = {
+  controls: document.getElementById('controls'),
+  select:   document.getElementById('deviceSelect'),
+  chanSelect: document.getElementById('chanSelect'),
+  chanInfo: document.getElementById('chanInfo'),
+  startBtn: document.getElementById('startBtn'),
+  hideBtn:  document.getElementById('hideBtn'),
+  status:   document.getElementById('status'),
+  pulse:    document.getElementById('pulse'),
+  pulseLbl: document.getElementById('pulse-label'),
+  volFill:  document.getElementById('volFill'),
+  volPct:   document.getElementById('volPct'),
+  bass:     document.getElementById('bassBar'),
+  mid:      document.getElementById('midBar'),
+  treble:   document.getElementById('trebleBar'),
+  spectrum: document.getElementById('spectrum'),
+};
+
+const SBARS = 64;
+for (let i = 0; i < SBARS; i++) {
+  const b = document.createElement('div');
+  b.className = 'sbar';
+  b.style.background = JUNO[i % 4];
+  els.spectrum.appendChild(b);
+}
+const sbars = els.spectrum.querySelectorAll('.sbar');
+
+let audio = null;
+
+function setStatus(msg, type = '') {
+  els.status.textContent = msg;
+  els.status.className = type;
+}
+
+/* ── Reconstruit le sélecteur de canaux selon le nombre détecté ── */
+function buildChannelOptions(n, keep) {
+  els.chanSelect.innerHTML = '<option value="">Tous les canaux (' + n + ')</option>';
+
+  // Paires adjacentes (1+2, 3+4, …)
+  for (let i = 0; i + 1 < n; i += 2) {
+    const opt = document.createElement('option');
+    opt.value = `${i},${i+1}`;
+    opt.textContent = `Entrées ${i+1} + ${i+2}`;
+    els.chanSelect.appendChild(opt);
+  }
+  // Chaque canal seul
+  for (let i = 0; i < n; i++) {
+    const opt = document.createElement('option');
+    opt.value = `${i}`;
+    opt.textContent = `Entrée ${i+1} seule`;
+    els.chanSelect.appendChild(opt);
+  }
+
+  // Restaure la sélection précédente si encore valide
+  if (keep && [...els.chanSelect.options].some(o => o.value === keep)) {
+    els.chanSelect.value = keep;
+  }
+
+  // Message d'info honnête
+  if (n <= 2) {
+    els.chanInfo.textContent = '⚠ Seulement ' + n + ' canaux exposés par Windows. Les entrées 3/4+ ne sont pas accessibles au navigateur — il faut les router sur 1/2 côté pilote UA-101.';
+    els.chanInfo.style.color = 'var(--juno-orange)';
+  } else {
+    els.chanInfo.textContent = '✓ ' + n + ' canaux disponibles — tu peux isoler n\'importe quelle entrée.';
+    els.chanInfo.style.color = 'var(--juno-blue-bright)';
+  }
+}
+
+/* ── Liste les périphériques d'entrée ── */
+async function refreshDevices() {
+  try {
+    const inputs = await AudioReactive.listInputs();
+    els.select.innerHTML = '';
+    if (!inputs.length) {
+      els.select.innerHTML = '<option>— aucun périphérique —</option>';
+      return;
+    }
+    const saved = localStorage.getItem(LS_KEY);
+    inputs.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.deviceId;
+      opt.textContent = d.label || `Entrée ${d.deviceId.slice(0,6)}`;
+      if (d.deviceId === saved) opt.selected = true;
+      els.select.appendChild(opt);
+    });
+  } catch (e) {
+    setStatus('Erreur énumération : ' + e.message, 'err');
+  }
+}
+
+/* ── Démarre / relance la capture ── */
+async function startCapture() {
+  const deviceId = els.select.value;
+  // Parse les canaux choisis : "1,3" → [1,3]
+  const channels = els.chanSelect.value
+    ? els.chanSelect.value.split(',').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n))
+    : null;
+  try {
+    if (audio) audio.destroy();
+
+    const opts = { fftSize: 256, inertia: 0.55 };
+    if (channels) opts.channels = channels;
+
+    if (deviceId) {
+      setStatus('Capture du périphérique sélectionné…');
+      audio = await AudioReactive.fromDevice(deviceId, opts);
+      localStorage.setItem(LS_KEY, deviceId);
+    } else {
+      // Aucun choix encore → on demande l'accès par défaut pour débloquer la liste
+      setStatus('Demande d\'accès audio (OBS autorise en arrière-plan)…');
+      audio = await AudioReactive.fromMic(opts);
+    }
+
+    // L'accès accordé → les labels deviennent disponibles, on (re)remplit la liste
+    await refreshDevices();
+
+    // Reconstruit la liste des canaux selon le nombre RÉELLEMENT détecté
+    buildChannelOptions(audio.channelCount, els.chanSelect.value);
+
+    const chosen = els.select.options[els.select.selectedIndex];
+    const chTxt  = channels ? ` · canaux ${channels.map(c=>c+1).join('+')}` : '';
+    setStatus('✓ Capture active : ' + (chosen ? chosen.textContent : 'micro par défaut') +
+              `\n${audio.channelCount} canaux fournis par le périphérique${chTxt}.`, 'ok');
+    audio.onTick(render);
+    els.startBtn.textContent = '↻ Relancer la capture';
+  } catch (e) {
+    if (e.name === 'NotAllowedError')
+      setStatus('✗ Accès refusé. Dans OBS, vérifie que la page est en http://localhost et que ta version d\'OBS autorise le micro.', 'err');
+    else if (e.name === 'OverconstrainedError')
+      setStatus('✗ Ce périphérique n\'est plus disponible. Reclique pour rafraîchir la liste.', 'err');
+    else
+      setStatus('✗ ' + e.name + ' : ' + e.message, 'err');
+  }
+}
+
+/* ── Changer de périphérique relance automatiquement la capture ── */
+els.select.addEventListener('change', () => {
+  if (audio && els.select.value) startCapture();
+});
+els.chanSelect.addEventListener('change', () => {
+  if (audio) startCapture();
+});
+
+/* ── Rendu visuel ── */
+function render(a) {
+  const v = a.volume();
+  const bass = a.band('bass');
+  const mid  = a.band('mid');
+  const treble = a.band('treble');
+
+  // Volume meter
+  els.volFill.style.width = (v * 100).toFixed(1) + '%';
+  els.volPct.textContent  = Math.round(v * 100) + '%';
+
+  // Pulse central
+  const scale = 1 + v * 0.6;
+  const beat  = a.beat();
+  els.pulse.style.transform = `scale(${scale})`;
+  els.pulse.style.boxShadow = beat
+    ? '0 0 60px 12px rgba(248,125,55,0.7)'
+    : `0 0 ${20 + v*40}px ${v*8}px rgba(248,125,55,${0.2 + v*0.5})`;
+  els.pulse.style.borderColor = beat ? 'var(--juno-red)' : 'var(--juno-orange)';
+  els.pulseLbl.textContent = beat ? 'BEAT' : (v > 0.02 ? Math.round(v*100)+'%' : 'silence');
+
+  // Bandes
+  els.bass.style.height   = (bass   * 100).toFixed(1) + '%';
+  els.mid.style.height    = (mid    * 100).toFixed(1) + '%';
+  els.treble.style.height = (treble * 100).toFixed(1) + '%';
+
+  // Spectre
+  const bars = a.bars(SBARS);
+  for (let i = 0; i < SBARS; i++) {
+    sbars[i].style.height = Math.max(2, bars[i] * 160) + 'px';
+    sbars[i].style.opacity = (0.3 + bars[i] * 0.7).toFixed(2);
+  }
+}
+
+/* ── Masquer / afficher le panneau ── */
+function toggleControls() {
+  els.controls.classList.toggle('hidden');
+}
+
+els.startBtn.addEventListener('click', startCapture);
+els.hideBtn.addEventListener('click', toggleControls);
+document.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'h') toggleControls();
+});
+
+/* ── Init ── */
+refreshDevices();
+
+// Si un périphérique était mémorisé, on tente un démarrage auto
+window.addEventListener('load', () => {
+  if (localStorage.getItem(LS_KEY)) {
+    setStatus('Périphérique mémorisé détecté — clique "Démarrer" (autorisation requise).');
+  }
+});
+</script>
+</body>
+</html>
