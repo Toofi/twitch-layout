@@ -96,6 +96,62 @@
     background: none;
     cursor: pointer;
   }
+  input[type="file"] {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 6px 8px;
+    width: 100%;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="file"]::file-selector-button {
+    background: var(--panel-light);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  .btn-img-remove {
+    flex-shrink: 0;
+    width: 32px;
+    background: var(--panel-light);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--juno-red);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-img-remove:hover { border-color: var(--juno-red); background: rgba(177,58,38,0.12); }
+  .img-y-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .img-y-cap {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .img-y-slider {
+    flex: 1;
+    accent-color: var(--juno-orange);
+    cursor: pointer;
+  }
 
   /* ── Jours ── */
   .day-list {
@@ -309,6 +365,9 @@ const state = {
     end:   '23:00',
     game:  '',
     note:  '',
+    img:    null,   // objet Image chargé (pour dessin canvas)
+    imgSrc: null,   // dataURL (pour l'aperçu / persistance)
+    imgY:   0.5,    // cadrage vertical 0=haut · 0.5=centre · 1=bas
   }))
 };
 
@@ -358,6 +417,19 @@ function buildEditor() {
             oninput="updateDay(${i},'game',this.value)">
         </div>
         <div class="field-group">
+          <span class="field-label">Visuel du jeu ${day.imgSrc ? '· chargé ✓' : ''}</span>
+          <div class="day-row">
+            <input type="file" accept="image/*" onchange="handleDayImage(${i}, this.files)">
+            ${day.imgSrc ? `<button class="btn-img-remove" title="Retirer l'image" onclick="removeDayImage(${i})">✕</button>` : ''}
+          </div>
+          ${day.imgSrc ? `
+          <div class="img-y-row">
+            <span class="img-y-cap">Cadrage ↕</span>
+            <input type="range" min="0" max="100" value="${Math.round(day.imgY*100)}"
+              class="img-y-slider" oninput="updateDayImgY(${i}, this.value)">
+          </div>` : ''}
+        </div>
+        <div class="field-group">
           <span class="field-label">Note</span>
           <input type="text" placeholder="optionnel" value="${day.note}"
             oninput="updateDay(${i},'note',this.value)">
@@ -377,6 +449,58 @@ function toggleDay(i, val) {
 function updateDay(i, key, val) {
   state.days[i][key] = val;
   render();
+}
+
+function handleDayImage(i, files) {
+  const file = files && files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      state.days[i].img    = img;
+      state.days[i].imgSrc = e.target.result;
+      buildEditor();  // rafraîchit le label "chargé ✓" + bouton retirer
+      render();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeDayImage(i) {
+  state.days[i].img    = null;
+  state.days[i].imgSrc = null;
+  state.days[i].imgY   = 0.5;
+  buildEditor();
+  render();
+}
+
+function updateDayImgY(i, val) {
+  state.days[i].imgY = val / 100;
+  render();  // pas de buildEditor : le curseur garde le focus pendant le glissement
+}
+
+// Dessine une image en mode "cover" dans une carte-jour arrondie + voile sombre
+// offsetY : 0 = haut de l'image · 0.5 = centre · 1 = bas
+function drawDayCover(c, img, x, y, w, h, radius, offsetY) {
+  c.save();
+  roundRect(c, x, y, w, h, radius);
+  c.clip();
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  const scale = Math.max(w / iw, h / ih);
+  const dw = iw * scale, dh = ih * scale;
+  const t = (offsetY == null ? 0.5 : offsetY);
+  c.drawImage(img, x + (w - dw) / 2, y - (dh - h) * t, dw, dh);
+  // Voile de lisibilité : plus sombre à gauche/droite (là où il y a du texte)
+  const g = c.createLinearGradient(x, 0, x + w, 0);
+  g.addColorStop(0,   'rgba(0,0,0,0.62)');
+  g.addColorStop(0.5, 'rgba(0,0,0,0.32)');
+  g.addColorStop(1,   'rgba(0,0,0,0.55)');
+  c.fillStyle = g;
+  c.fillRect(x, y, w, h);
+  c.restore();
 }
 
 // Inputs globaux
@@ -527,6 +651,9 @@ function drawCard(W, H) {
     roundRect(ctx, bx, by, bw, bh, 3);
     ctx.fill();
 
+    // Visuel du jeu en fond (si présent)
+    if (day.img) drawDayCover(ctx, day.img, bx, by, bw, bh, 3, day.imgY);
+
     // Barre accent gauche
     ctx.fillStyle = color;
     ctx.globalAlpha = 0.9;
@@ -537,6 +664,9 @@ function drawCard(W, H) {
     const tx = bx + accentW + 20;
     const rowTop = by + bh * 0.40;
     const rowBot = by + bh * 0.78;
+
+    // Ombre portée sur le texte quand il y a une image derrière
+    if (day.img) { ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 1; }
 
     // Nom du jour — haut gauche
     ctx.textAlign = 'left';
@@ -572,6 +702,9 @@ function drawCard(W, H) {
       ctx.letterSpacing = '1px';
       ctx.fillText(day.note, bx + bw - 16, rowBot);
     }
+
+    // Reset ombre pour ne pas affecter le reste du dessin
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   });
 
   // ── Bas de page
@@ -709,9 +842,11 @@ function drawCardTo(c, W, H) {
     const bx=PAD,by=y+idx*(dayH+dayGap),bw=W-PAD*2,bh=dayH;
     c.fillStyle='rgba(255,255,255,0.03)';
     roundRectC(c,bx,by,bw,bh,3);c.fill();
+    if(day.img) drawDayCoverC(c, day.img, bx, by, bw, bh, 3, day.imgY);
     c.fillStyle=color;c.globalAlpha=.9;
     roundRectC(c,bx,by,4,bh,[3,0,0,3]);c.fill();c.globalAlpha=1;
     const tx=bx+4+20,rowTop=by+bh*.40,rowBot=by+bh*.78;
+    if(day.img){c.shadowColor='rgba(0,0,0,0.85)';c.shadowBlur=6;c.shadowOffsetY=1;}
     c.textAlign='left';c.fillStyle=color;
     c.font=`700 ${Math.round(bh*.32)}px Rajdhani`;c.letterSpacing='3px';
     c.fillText(day.name.toUpperCase(),tx,rowTop);
@@ -730,6 +865,7 @@ function drawCardTo(c, W, H) {
       c.font=`400 ${Math.round(bh*.17)}px "Share Tech Mono"`;c.letterSpacing='1px';
       c.fillText(day.note,bx+bw-16,rowBot);
     }
+    c.shadowColor='transparent';c.shadowBlur=0;c.shadowOffsetY=0;
   });
 
   const botY=H-72;
@@ -747,6 +883,26 @@ function roundRectC(c,x,y,w,h,r){
   c.lineTo(x+w,y+h-br);c.arcTo(x+w,y+h,x+w-br,y+h,br);
   c.lineTo(x+bl,y+h);c.arcTo(x,y+h,x,y+h-bl,bl);
   c.lineTo(x,y+tl);c.arcTo(x,y,x+tl,y,tl);c.closePath();
+}
+
+// Version export du "cover" (utilise roundRectC)
+function drawDayCoverC(c, img, x, y, w, h, radius, offsetY) {
+  c.save();
+  roundRectC(c, x, y, w, h, radius);
+  c.clip();
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  const scale = Math.max(w / iw, h / ih);
+  const dw = iw * scale, dh = ih * scale;
+  const t = (offsetY == null ? 0.5 : offsetY);
+  c.drawImage(img, x + (w - dw) / 2, y - (dh - h) * t, dw, dh);
+  const g = c.createLinearGradient(x, 0, x + w, 0);
+  g.addColorStop(0,   'rgba(0,0,0,0.62)');
+  g.addColorStop(0.5, 'rgba(0,0,0,0.32)');
+  g.addColorStop(1,   'rgba(0,0,0,0.55)');
+  c.fillStyle = g;
+  c.fillRect(x, y, w, h);
+  c.restore();
 }
 
 /* ════════════════════════════════════════════
