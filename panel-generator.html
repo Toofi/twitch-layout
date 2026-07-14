@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Générateur de panel — Toofi</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --juno-red:#b13a26; --juno-blue:#3c4bb0; --juno-orange:#f87d37; --juno-yellow:#e9bc3f;
+    --juno-blue-bright:#6478dc;
+    --bg:#3e3e3e; --panel-dark:#4a4a4c; --chat-bg:#2a2a2c; --void:#1a1a1a;
+    --white:#f0ede8; --serigraph:#e8e4dc; --ivory:#f5dfa0; --muted:#a09880; --dark-text:#1a1a1a;
+    --line:rgba(255,255,255,0.08);
+  }
+
+  body { background:#0e0e10; color:var(--white); font-family:'Rajdhani',sans-serif; min-height:100vh; }
+
+  .topbands { position:fixed; top:0; left:0; right:0; height:4px; display:flex; z-index:20; }
+  .topbands i { flex:1; }
+  .topbands i:nth-child(1){background:var(--juno-red)} .topbands i:nth-child(2){background:var(--juno-blue)}
+  .topbands i:nth-child(3){background:var(--juno-orange)} .topbands i:nth-child(4){background:var(--juno-yellow)}
+
+  .wrap { display:grid; grid-template-columns:minmax(340px,420px) 1fr; gap:0; min-height:100vh; }
+  @media (max-width:820px){ .wrap { grid-template-columns:1fr; } }
+
+  /* ============ ÉDITEUR ============ */
+  .editor { padding:34px 28px 60px; border-right:1px solid var(--line); }
+  .editor h1 { font-size:26px; font-weight:700; letter-spacing:6px; text-transform:uppercase; line-height:1; }
+  .editor h1 .o { color:var(--juno-blue-bright); }
+  .editor .sub { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ivory); margin:8px 0 26px; }
+
+  .field { margin-bottom:18px; }
+  .field > label { display:block; font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--juno-orange); margin-bottom:7px; }
+  .field input[type=text], .field textarea, .field select {
+    width:100%; background:var(--chat-bg); color:var(--white);
+    border:1px solid var(--line); border-radius:3px; padding:9px 11px;
+    font-family:'Rajdhani',sans-serif; font-size:15px; letter-spacing:.5px;
+  }
+  .field textarea { font-family:'Share Tech Mono',monospace; font-size:13px; line-height:1.5; resize:vertical; min-height:120px; }
+  .field select { cursor:pointer; }
+  .field input:focus, .field textarea:focus, .field select:focus { outline:none; border-color:var(--juno-orange); }
+  .hint { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:.5px; color:var(--muted); margin-top:6px; line-height:1.4; }
+  .hint b { color:var(--ivory); font-weight:400; }
+
+  .checks { display:flex; flex-wrap:wrap; gap:14px 20px; }
+  .check { display:flex; align-items:center; gap:8px; cursor:pointer; }
+  .check input { accent-color:var(--juno-orange); width:15px; height:15px; }
+  .check span { font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:1px; color:var(--serigraph); text-transform:uppercase; }
+
+  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:26px; }
+  .actions button {
+    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase;
+    cursor:pointer; padding:11px 16px; border-radius:3px; border:1px solid var(--juno-orange);
+    background:var(--juno-orange); color:var(--dark-text); font-weight:400; transition:all .15s;
+  }
+  .actions button:hover { filter:brightness(1.08); }
+  .savednote { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--muted); margin-top:14px; min-height:14px; }
+
+  /* ============ APERÇU ============ */
+  .stage {
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding:60px 24px; gap:16px;
+    background: radial-gradient(120% 80% at 50% 0%, rgba(60,75,176,0.06), transparent 60%), #0e0e10;
+  }
+  .stage .caplbl { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); text-align:center; }
+  #cv { width:320px; height:auto; display:block; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
+</style>
+</head>
+<body>
+
+<div class="topbands"><i></i><i></i><i></i><i></i></div>
+
+<div class="wrap">
+
+  <!-- ======== ÉDITEUR ======== -->
+  <div class="editor">
+    <h1>T<span class="o">o</span>ofi · Panels</h1>
+    <div class="sub">Générateur · charte JUNO-106</div>
+
+    <div class="field">
+      <label for="title">Titre</label>
+      <input type="text" id="title" value="Réseaux" placeholder="Ex. Horaires, Réseaux, Le Setup…">
+    </div>
+
+    <div class="field">
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="wordmark"><span>Titre en logo (style Toofi · dégradé JUNO)</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="type">Type de contenu</label>
+      <select id="type">
+        <option value="text">Texte / à propos</option>
+        <option value="list" selected>Liste clé · valeur</option>
+        <option value="schedule">Horaires</option>
+        <option value="rules">Règles numérotées</option>
+        <option value="buttons">Boutons d'action</option>
+      </select>
+    </div>
+
+    <div class="field" id="grp-tagline" hidden>
+      <label for="tagline">Sous-titre (mono, optionnel)</label>
+      <input type="text" id="tagline" value="Production musicale · live" placeholder="Petit label mono sous le titre">
+    </div>
+
+    <div class="field">
+      <label for="content">Contenu</label>
+      <textarea id="content" spellcheck="false"></textarea>
+      <div class="hint" id="content-hint"></div>
+    </div>
+
+    <div class="field">
+      <div class="checks">
+        <label class="check" id="grp-dots" hidden><input type="checkbox" id="dots" checked><span>Règle 4 points</span></label>
+        <label class="check"><input type="checkbox" id="bottomband" checked><span>Bande basse</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="footer">Note de pied (mono, optionnel)</label>
+      <input type="text" id="footer" value="" placeholder="Ex. heure de Paris · jj/mm/aaaa">
+    </div>
+
+    <div class="actions">
+      <button id="downloadPng">Télécharger le PNG</button>
+    </div>
+    <div class="savednote" id="savednote"></div>
+  </div>
+
+  <!-- ======== APERÇU ======== -->
+  <div class="stage">
+    <div class="caplbl">Aperçu · 320 px (largeur Twitch)</div>
+    <canvas id="cv"></canvas>
+    <div class="caplbl">Export PNG 2× (640 px de large) — Twitch l'affiche redimensionné en 320.</div>
+  </div>
+
+</div>
+
+<script>
+  // ================= Constantes de rendu =================
+  const SCALE = 2;                 // export retina : 640 px de large
+  const W = 320, PAD_X = 20, PAD_TOP = 26, PAD_BOT = 22;
+  const CW = W - PAD_X * 2;        // largeur de contenu
+
+  const C = {
+    red:'#b13a26', blue:'#3c4bb0', orange:'#f87d37', yellow:'#e9bc3f', blueBright:'#6478dc',
+    bg:'#3e3e3e', panelDark:'#4a4a4c', white:'#f0ede8', serigraph:'#e8e4dc',
+    ivory:'#f5dfa0', muted:'#a09880', dark:'#1a1a1a', line:'rgba(255,255,255,0.08)',
+  };
+  const JUNO = { r:C.red, b:C.blue, o:C.orange, y:C.yellow };
+
+  const MONO = `'Share Tech Mono',monospace`;
+  const RAJ  = `'Rajdhani',sans-serif`;
+  const AVE  = `'Avenir Next Condensed','Avenir','Arial Narrow','Gill Sans MT Condensed',sans-serif`;
+  const TNR  = `'Times New Roman',Times,serif`;
+
+  const LOGO = 50;
+  const F = {
+    logoAv:{ s:LOGO, w:400, fam:AVE, ls:'-0.5px' },
+    logoTnr:{ s:LOGO, w:400, fam:TNR, ls:'0px', i:true },
+    title:{ s:21, w:600, fam:RAJ, ls:'4px' },
+    tag:{ s:10, w:400, fam:MONO, ls:'2px' },
+    para:{ s:14, w:400, fam:RAJ, ls:'0px' },
+    key:{ s:10, w:400, fam:MONO, ls:'2px' },
+    val:{ s:15, w:500, fam:RAJ, ls:'0.5px' },
+    day:{ s:12, w:400, fam:MONO, ls:'1px' },
+    num:{ s:11, w:400, fam:MONO, ls:'0px' },
+    rule:{ s:13, w:400, fam:RAJ, ls:'0px' },
+    btnN:{ s:10, w:400, fam:MONO, ls:'2px' },
+    btnS:{ s:13, w:400, fam:RAJ, ls:'0px' },
+    foot:{ s:9, w:400, fam:MONO, ls:'2px' },
+  };
+
+  // ================= Helpers =================
+  const $ = id => document.getElementById(id);
+  const lines = s => s.split('\n').map(l => l.trim()).filter(Boolean);
+  const cols = l => l.split('|').map(c => c.trim());
+  const COLORS = ['r','b','o','y'];
+
+  const cv = $('cv');
+  const ctx = cv.getContext('2d');
+
+  function font(f){ ctx.font = `${f.i?'italic ':''}${f.w} ${f.s}px ${f.fam}`; ctx.letterSpacing = f.ls || '0px'; }
+  function wrap(text, maxW){
+    const words = String(text).split(/\s+/); const out = []; let cur = '';
+    for (const w of words){ const t = cur ? cur+' '+w : w; if (cur && ctx.measureText(t).width > maxW){ out.push(cur); cur = w; } else cur = t; }
+    if (cur) out.push(cur); return out.length ? out : [''];
+  }
+  function dot(x, y, r, color){ ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill(); }
+  function hline(y){ ctx.fillStyle = C.line; ctx.fillRect(PAD_X, y, CW, 1); }
+
+  // ================= Layout + rendu (source unique) =================
+  // Construit la liste d'opérations de dessin et calcule la hauteur totale.
+  function build(){
+    const ops = [];
+    let y = PAD_TOP;
+    const type = $('type').value;
+    const title = $('title').value || '';
+
+    // ---- En-tête ----
+    if ($('wordmark').checked){
+      font(F.logoAv);
+      const tw = ctx.measureText(title).width;
+      const y0 = y;
+      ops.push(() => {
+        const g = ctx.createLinearGradient(PAD_X, y0, PAD_X + tw, y0 + LOGO);
+        g.addColorStop(0, C.red); g.addColorStop(.28, C.blue); g.addColorStop(.55, C.orange);
+        g.addColorStop(.78, C.yellow); g.addColorStop(1, C.red);
+        ctx.fillStyle = g; ctx.textBaseline = 'top';
+        font(F.logoAv);  ctx.fillText(title, PAD_X, y0);          // couche condensée
+        font(F.logoTnr); ctx.fillText(title, PAD_X, y0);          // couche Times italique par-dessus
+      });
+      y += Math.round(LOGO * 0.92) + 12;
+    } else {
+      const t = title.toUpperCase(); const y0 = y;
+      ops.push(() => { font(F.title); ctx.fillStyle = C.white; ctx.textBaseline = 'top'; ctx.fillText(t, PAD_X, y0); });
+      y += 21 + 14;
+    }
+
+    // ---- Corps ----
+    if (type === 'text'){
+      const tag = $('tagline').value.trim();
+      if (tag){ const y0 = y; const t = tag.toUpperCase();
+        ops.push(() => { font(F.tag); ctx.fillStyle = C.ivory; ctx.textBaseline='top'; ctx.fillText(t, PAD_X, y0); });
+        y += 10 + 14;
+      }
+      const paras = $('content').value.split(/\n\s*\n/).map(p => p.trim().replace(/\n/g,' ')).filter(Boolean);
+      font(F.para);
+      paras.forEach((p, idx) => {
+        if (idx) y += 8;
+        wrap(p, CW).forEach(ln => { const y0 = y;
+          ops.push(() => { font(F.para); ctx.fillStyle = C.serigraph; ctx.textBaseline='top'; ctx.fillText(ln, PAD_X, y0); });
+          y += 20;
+        });
+      });
+      if ($('dots').checked){ const y0 = y + 14; const order = ['r','b','o','y'];
+        ops.push(() => order.forEach((k,i) => dot(PAD_X + 3 + i*14, y0 + 3, 3.5, JUNO[k])));
+        y = y0 + 7 + 2;
+      }
+    }
+    else if (type === 'list'){
+      const items = lines($('content').value);
+      items.forEach((l, idx) => {
+        const [k, ...rest] = cols(l); const val = rest.join(' | ');
+        font(F.val); const vLines = wrap(val, CW - 98);
+        const rowH = 8 + Math.max(15, vLines.length*17) + 8;
+        const y0 = y;
+        ops.push(() => {
+          font(F.key); ctx.fillStyle = C.muted; ctx.textBaseline='top'; ctx.fillText((k||'').toUpperCase(), PAD_X, y0 + 9);
+          font(F.val); ctx.fillStyle = C.white;
+          vLines.forEach((ln,i) => ctx.fillText(ln, PAD_X + 98, y0 + 8 + i*17));
+        });
+        y += rowH;
+        if (idx < items.length - 1){ const yl = y; ops.push(() => hline(yl)); }
+      });
+    }
+    else if (type === 'schedule'){
+      const items = lines($('content').value);
+      items.forEach((l, idx) => {
+        const [day, time, color] = cols(l);
+        const off = (color||'').toLowerCase() === 'off';
+        const c = COLORS.includes((color||'').toLowerCase()) ? (color||'').toLowerCase() : '';
+        const led = off ? C.panelDark : (c ? JUNO[c] : C.muted);
+        const y0 = y;
+        ops.push(() => {
+          dot(PAD_X + 3.5, y0 + 14, 3.5, led);
+          font(F.day); ctx.textBaseline='top';
+          ctx.fillStyle = off ? C.muted : C.white; ctx.textAlign='left';
+          ctx.fillText((day||'').toUpperCase(), PAD_X + 17, y0 + 8);
+          ctx.fillStyle = off ? C.muted : C.ivory; ctx.textAlign='right';
+          ctx.fillText(time||'', W - PAD_X, y0 + 8);
+          ctx.textAlign='left';
+        });
+        y += 26;
+        if (idx < items.length - 1){ const yl = y; ops.push(() => hline(yl)); }
+      });
+    }
+    else if (type === 'rules'){
+      const items = lines($('content').value);
+      items.forEach((l, idx) => {
+        if (idx) y += 9;
+        const num = String(idx+1).padStart(2,'0');
+        font(F.rule); const tLines = wrap(l, CW - 26);
+        const y0 = y;
+        ops.push(() => {
+          font(F.num); ctx.fillStyle = C.orange; ctx.textBaseline='top'; ctx.fillText(num, PAD_X, y0 + 1);
+          font(F.rule); ctx.fillStyle = C.serigraph;
+          tLines.forEach((ln,i) => ctx.fillText(ln, PAD_X + 26, y0 + i*18));
+        });
+        y += Math.max(18, tLines.length*18);
+      });
+    }
+    else if (type === 'buttons'){
+      const items = lines($('content').value);
+      items.forEach((l, idx) => {
+        if (idx) y += 8;
+        const [n, s, color] = cols(l);
+        const c = COLORS.includes((color||'').toLowerCase()) ? (color||'').toLowerCase() : 'o';
+        const h = 36; const y0 = y;
+        ops.push(() => {
+          ctx.fillStyle = 'rgba(0,0,0,0.14)'; ctx.fillRect(PAD_X, y0, CW, h);
+          ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.strokeRect(PAD_X + 0.5, y0 + 0.5, CW - 1, h - 1);
+          ctx.fillStyle = JUNO[c]; ctx.fillRect(PAD_X, y0, 3, h);
+          font(F.btnN); ctx.fillStyle = C.white; ctx.textBaseline='middle'; ctx.textAlign='left';
+          ctx.fillText((n||'').toUpperCase(), PAD_X + 13, y0 + h/2);
+          font(F.btnS); ctx.fillStyle = C.muted; ctx.textAlign='right';
+          ctx.fillText(s||'', W - PAD_X - 13, y0 + h/2);
+          ctx.textAlign='left'; ctx.textBaseline='top';
+        });
+        y += h;
+      });
+    }
+
+    // ---- Note de pied ----
+    const foot = $('footer').value.trim();
+    if (foot){ y += 14; const y0 = y;
+      ops.push(() => { font(F.foot); ctx.fillStyle = C.muted; ctx.textBaseline='top'; ctx.textAlign='right'; ctx.fillText(foot, W - PAD_X, y0); ctx.textAlign='left'; });
+      y += 11;
+    }
+
+    return { height: Math.ceil(y + PAD_BOT), ops };
+  }
+
+  function paintFrame(H){
+    // Fond chassis
+    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+    // Scanlines + métal (subtil)
+    ctx.fillStyle = 'rgba(0,0,0,0.04)'; for (let yy = 3; yy < H; yy += 4) ctx.fillRect(0, yy, W, 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.02)'; for (let yy = 2; yy < H; yy += 3) ctx.fillRect(0, yy, W, 1);
+    ctx.fillStyle = 'rgba(0,0,0,0.02)'; for (let xx = 8; xx < W; xx += 9) ctx.fillRect(xx, 0, 1, H);
+
+    // Bande haute R·B·O·Y (4 px)
+    const seg = W / 4;
+    [C.red, C.blue, C.orange, C.yellow].forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(i*seg, 0, Math.ceil(seg), 4); });
+    // Bande basse inversée Y·O·B·R (3 px)
+    if ($('bottomband').checked){
+      [C.yellow, C.orange, C.blue, C.red].forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(i*seg, H-3, Math.ceil(seg), 3); });
+    }
+    // Cornières
+    const b = 8, L = 12, t = 2;
+    ctx.fillStyle = C.red;    ctx.fillRect(b, b, L, t);        ctx.fillRect(b, b, t, L);
+    ctx.fillStyle = C.yellow; ctx.fillRect(W-b-L, b, L, t);    ctx.fillRect(W-b-t, b, t, L);
+    ctx.fillStyle = C.blue;   ctx.fillRect(b, H-b-t, L, t);    ctx.fillRect(b, H-b-L, t, L);
+    ctx.fillStyle = C.orange; ctx.fillRect(W-b-L, H-b-t, L, t);ctx.fillRect(W-b-t, H-b-L, t, L);
+    // Bordure
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, W-1, H-1);
+  }
+
+  function render(){
+    const { height, ops } = build();
+    cv.width = W * SCALE; cv.height = height * SCALE;
+    cv.style.width = W + 'px'; cv.style.height = height + 'px';
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    paintFrame(height);
+    ops.forEach(op => op());
+  }
+
+  // ================= UI =================
+  const HINTS = {
+    text: 'Un paragraphe par ligne. Ligne vide = nouveau paragraphe.',
+    list: 'Une entrée par ligne : <b>Clé | Valeur</b>. Ex. <b>Twitch | @toofi__</b>',
+    schedule: 'Une ligne par jour : <b>Jour | Heure | couleur</b>. Couleur = r/b/o/y ou <b>off</b> (repos). Ex. <b>LUN | 21:00 | r</b>',
+    rules: 'Une règle par ligne (numérotées automatiquement).',
+    buttons: 'Un bouton par ligne : <b>Nom | Sous-titre | couleur</b> (r/b/o/y). Ex. <b>Sub | Prime incluse | b</b>',
+  };
+  const DEFAULTS = {
+    text: "Beats, sound design & impro au clavier, construits en direct autour du Roland JUNO-106.\nPose-toi, mets le son, on bricole ensemble.",
+    list: "Twitch | @toofi__\nDiscord | discord.gg/toofi\nInstagram | @toofi.music\nSpotify | Toofi",
+    schedule: "LUN | 21:00 | r\nMAR | repos | off\nMER | 21:00 | b\nVEN | 21:00 | o\nSAM | 15:00 | y\nDIM | repos | off",
+    rules: "Respect avant tout — zéro insulte.\nPas de spam ni de pub sauvage.\nBienveillant même en désaccord.\nAmuse-toi et balance tes idées de son.",
+    buttons: "Follow | gratuit, énorme | r\nSub | Prime incluse | b\nBits | cheer & fun | o\nPartage | le meilleur soutien | y",
+  };
+  const DEFAULT_TITLE = { text:'À propos', list:'Réseaux', schedule:'Horaires', rules:'Le Chat', buttons:'Soutenir' };
+
+  const store = { ...DEFAULTS };
+  let lastType = 'list';
+
+  function syncTypeUI(){
+    const type = $('type').value;
+    $('grp-tagline').hidden = type !== 'text';
+    $('grp-dots').hidden = type !== 'text';
+    $('content-hint').innerHTML = HINTS[type];
+  }
+
+  $('type').addEventListener('change', () => {
+    store[lastType] = $('content').value;
+    const type = $('type').value;
+    $('content').value = store[type] ?? '';
+    if (!$('title').value.trim() || Object.values(DEFAULT_TITLE).includes($('title').value.trim())) $('title').value = DEFAULT_TITLE[type];
+    lastType = type; syncTypeUI(); render();
+  });
+  ['title','tagline','content','footer'].forEach(id => $(id).addEventListener('input', render));
+  ['wordmark','dots','bottomband'].forEach(id => $(id).addEventListener('change', render));
+
+  // ================= Export PNG =================
+  function slug(s){
+    return (s || 'panel').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'panel';
+  }
+  function flash(msg){ const n = $('savednote'); n.textContent = msg; setTimeout(() => { if (n.textContent === msg) n.textContent = ''; }, 2500); }
+
+  $('downloadPng').addEventListener('click', () => {
+    render();
+    cv.toBlob(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `panel-${slug($('title').value)}.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      flash('PNG téléchargé.');
+    }, 'image/png');
+  });
+
+  // ================= Init =================
+  $('content').value = DEFAULTS[lastType];
+  syncTypeUI();
+  render();                                   // premier rendu (polices peut-être en fallback)
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);  // re-rendu une fois les polices chargées
+</script>
+</body>
+</html>

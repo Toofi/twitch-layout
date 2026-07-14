@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Wallpaper — Toofi</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --juno-blue-bright: #6478dc;
+    --bg:          #1e1c18;
+    --white:       #f0ede8;
+  }
+
+  html, body {
+    width: 1920px; height: 1080px;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  /* ── FOND — dégradé 4 couleurs (repris de background.html, un peu plus présent) ── */
+  .bg-gradient {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      120deg,
+      rgba(177,58,38,0.14)   0%,
+      rgba(30,28,24,1)       22%,
+      rgba(60,75,176,0.12)   42%,
+      rgba(30,28,24,1)       57%,
+      rgba(248,125,55,0.13)  73%,
+      rgba(30,28,24,1)       86%,
+      rgba(233,188,63,0.10)  100%
+    );
+  }
+
+  /* ── HALO RADIAL DOUX AU CENTRE ── */
+  .glow {
+    position: absolute; inset: 0;
+    background: radial-gradient(
+      ellipse 90% 70% at 50% 46%,
+      rgba(60,75,176,0.06) 0%,
+      transparent 62%
+    );
+    pointer-events: none;
+  }
+
+  /* ── VIGNETTE ── */
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(
+      ellipse 120% 120% at 50% 50%,
+      transparent 42%,
+      rgba(0,0,0,0.5) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* ── GRAIN TRÈS SUBTIL (anti-banding) ── */
+  .noise {
+    position: absolute; inset: 0;
+    opacity: 0.02;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    pointer-events: none;
+  }
+
+  /* ── LISERÉ 4 COULEURS SUR LES 4 CÔTÉS ── */
+  :root { --liseré: 26px; }
+
+  .frame i {
+    position: absolute; z-index: 6;
+  }
+  /* Haut — R · B · O · Y */
+  .frame .top {
+    top: 0; left: 0; right: 0; height: var(--liseré);
+    background: linear-gradient(90deg,
+      var(--juno-red)    0% 25%,
+      var(--juno-blue)   25% 50%,
+      var(--juno-orange) 50% 75%,
+      var(--juno-yellow) 75% 100%);
+  }
+  /* Bas — Y · O · B · R (inversé, comme la charte) */
+  .frame .bottom {
+    bottom: 0; left: 0; right: 0; height: var(--liseré);
+    background: linear-gradient(90deg,
+      var(--juno-yellow) 0% 25%,
+      var(--juno-orange) 25% 50%,
+      var(--juno-blue)   50% 75%,
+      var(--juno-red)    75% 100%);
+  }
+  /* Gauche — R · B · O · Y (de haut en bas) */
+  .frame .left {
+    top: 0; bottom: 0; left: 0; width: var(--liseré);
+    background: linear-gradient(180deg,
+      var(--juno-red)    0% 25%,
+      var(--juno-blue)   25% 50%,
+      var(--juno-orange) 50% 75%,
+      var(--juno-yellow) 75% 100%);
+  }
+  /* Droite — Y · O · B · R (miroir) */
+  .frame .right {
+    top: 0; bottom: 0; right: 0; width: var(--liseré);
+    background: linear-gradient(180deg,
+      var(--juno-yellow) 0% 25%,
+      var(--juno-orange) 25% 50%,
+      var(--juno-blue)   50% 75%,
+      var(--juno-red)    75% 100%);
+  }
+</style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="glow"></div>
+  <div class="vignette"></div>
+  <div class="noise"></div>
+
+  <div class="frame">
+    <i class="top"></i>
+    <i class="bottom"></i>
+    <i class="left"></i>
+    <i class="right"></i>
+  </div>
+</body>
+</html>
