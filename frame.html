@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Liseré — Toofi</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --juno-red:    #b13a26;
+    --juno-blue:   #3c4bb0;
+    --juno-orange: #f87d37;
+    --juno-yellow: #e9bc3f;
+    --liseré: 26px;
+  }
+
+  html, body {
+    width: 1920px; height: 1080px;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  /* ── LISERÉ 4 COULEURS SUR LES 4 CÔTÉS ── */
+  .frame i {
+    position: absolute; z-index: 6;
+  }
+  /* Haut — R · B · O · Y */
+  .frame .top {
+    top: 0; left: 0; right: 0; height: var(--liseré);
+    background: linear-gradient(90deg,
+      var(--juno-red)    0% 25%,
+      var(--juno-blue)   25% 50%,
+      var(--juno-orange) 50% 75%,
+      var(--juno-yellow) 75% 100%);
+  }
+  /* Bas — Y · O · B · R (inversé, comme la charte) */
+  .frame .bottom {
+    bottom: 0; left: 0; right: 0; height: var(--liseré);
+    background: linear-gradient(90deg,
+      var(--juno-yellow) 0% 25%,
+      var(--juno-orange) 25% 50%,
+      var(--juno-blue)   50% 75%,
+      var(--juno-red)    75% 100%);
+  }
+  /* Gauche — R · B · O · Y (de haut en bas) */
+  .frame .left {
+    top: 0; bottom: 0; left: 0; width: var(--liseré);
+    background: linear-gradient(180deg,
+      var(--juno-red)    0% 25%,
+      var(--juno-blue)   25% 50%,
+      var(--juno-orange) 50% 75%,
+      var(--juno-yellow) 75% 100%);
+  }
+  /* Droite — Y · O · B · R (miroir) */
+  .frame .right {
+    top: 0; bottom: 0; right: 0; width: var(--liseré);
+    background: linear-gradient(180deg,
+      var(--juno-yellow) 0% 25%,
+      var(--juno-orange) 25% 50%,
+      var(--juno-blue)   50% 75%,
+      var(--juno-red)    75% 100%);
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <i class="top"></i>
+    <i class="bottom"></i>
+    <i class="left"></i>
+    <i class="right"></i>
+  </div>
+</body>
+</html>
